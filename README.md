@@ -24,6 +24,5 @@ Try to stick to these shadcn/ui components as much as possible, and only create 
 
 ### Deploying to production:
 
-1. Run `npm run build`. If successful, a folder called `out/` will have been compiled.
-2. Run the command `sudo rsync -av --delete out/ /var/www/chatdku/` on the server to update the frontend files on deployment.
-3. Visit [ChatDKU](https://chatdku.dukekunshan.edu.cn) in incognito mode. Make sure the chat responses are clear and legible.
+1. Run `sudo bash deploy.sh` to run the deployment script. It will go through the entire test suite and deploy the frontend as well as create a backup of the previous deployment in case a rollback is needed.  
+2. Visit [ChatDKU](https://chatdku.dukekunshan.edu.cn) in incognito mode. Make sure the chat responses are clear and legible.
