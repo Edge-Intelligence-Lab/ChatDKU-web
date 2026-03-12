@@ -213,7 +213,7 @@ export default function ChatPage({ isDev = false }: ChatPageProps) {
 						setChatHistoryId(newSession);
 					} else {
 						setSessionError(
-							"We couldn't start a chat session. Please try again.",
+							"We couldn't start a chat session. Try refreshing the page.",
 						);
 					}
 				}
@@ -221,7 +221,7 @@ export default function ChatPage({ isDev = false }: ChatPageProps) {
 				console.error("Error preparing session:", error);
 				if (isMounted) {
 					setSessionError(
-						"We couldn't start a chat session. Please refresh the page.",
+						"We couldn't start a chat session. Try refreshing the page.",
 					);
 				}
 			} finally {
@@ -504,35 +504,34 @@ export default function ChatPage({ isDev = false }: ChatPageProps) {
 								);
 
 								try {
-									let response: any;
-									if (value.trim().toLowerCase() === "test") {
-										response = await fetch("/mdtest.md");
-									} else {
-										if (isDev) {
-											response = await fetch(apiEndpoint, {
-												method: "POST",
-												headers: { "Content-Type": "application/json" },
-												body: JSON.stringify({
-													messages: [{ role: "user", content: value }],
-													chatHistoryId: activeSessionId,
-													mode: thinkingMode ? "agent" : "",
-													searchMode: searchMode,
-												}),
-											});
-										} else {
-											response = await fetch(
-												"https://chatdku.dukekunshan.edu.cn/api/chat",
-												{
-													method: "POST",
-													headers: { "Content-Type": "application/json" },
-													body: JSON.stringify({
-														messages: [{ role: "user", content: value }],
-														chatHistoryId: activeSessionId,
-														mode: thinkingMode ? "agent" : "",
-														searchMode: searchMode,
-													}),
-												},
-											);
+									const fetchChat = async (sessionId: string) => {
+										if (value.trim().toLowerCase() === "test") {
+											return fetch("/mdtest.md");
+										}
+										const url = isDev
+											? apiEndpoint
+											: "https://chatdku.dukekunshan.edu.cn/api/chat";
+										return fetch(url, {
+											method: "POST",
+											headers: { "Content-Type": "application/json" },
+											body: JSON.stringify({
+												messages: [{ role: "user", content: value }],
+												chatHistoryId: sessionId,
+												mode: thinkingMode ? "agent" : "",
+												searchMode: searchMode,
+											}),
+										});
+									};
+
+									let response = await fetchChat(activeSessionId);
+
+									// On server error, refresh session token and retry once
+									if (!response.ok) {
+										const newSession = await getNewSession();
+										if (newSession) {
+											setCurrentSessionId(newSession);
+											setChatHistoryId(newSession);
+											response = await fetchChat(newSession);
 										}
 									}
 
