@@ -24,7 +24,7 @@ export default function WelcomeBanner() {
 		); // still loading or not logged in
 	return (
 		<h1 className="text-2xl lg:text-3xl">
-			Welcome, {me.displayName || me.eppn.split("@")[0]}!
+			Welcome, {me.displayName}!
 		</h1>
 	);
 }
