@@ -3,7 +3,7 @@ import { API_ENDPOINTS } from "@/lib/constants";
 import { getNewSession } from "@/lib/convosNew";
 
 export default function WelcomeBanner() {
-	const [me, setMe] = useState<{ eppn: string; displayName: string } | null>(
+	const [me, setMe] = useState<{ netid: string; username: string } | null>(
 		null,
 	);
 
@@ -24,7 +24,7 @@ export default function WelcomeBanner() {
 		); // still loading or not logged in
 	return (
 		<h1 className="text-2xl lg:text-3xl">
-			Welcome, {me.displayName}!
+			Welcome, {me.username}!
 		</h1>
 	);
 }
