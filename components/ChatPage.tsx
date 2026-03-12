@@ -493,7 +493,7 @@ export default function ChatPage({ isDev = false }: ChatPageProps) {
 
 								addMessageToChat(
 									"user",
-									value,
+									value.trim(),
 									"bg-muted/50 dark:bg-muted/50 text-sm",
 								);
 
