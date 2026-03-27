@@ -28,7 +28,10 @@ export async function POST(request: Request) {
           status: backendResponse.status,
         });
       }
-      return new NextResponse(await backendResponse.text());
+      // Stream the response body through instead of buffering
+      return new NextResponse(backendResponse.body, {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      });
     } catch (error) {
       return new NextResponse(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, {
         status: 500,
@@ -36,7 +39,22 @@ export async function POST(request: Request) {
     }
   }
 
+  // Mock: simulate streaming by sending word-by-word chunks
   const userMessage = body?.messages?.[0]?.content ?? body?.userInput ?? 'your question';
   const pick = MOCK_RESPONSES[Math.floor(Math.random() * MOCK_RESPONSES.length)];
-  return new NextResponse(pick(userMessage), { headers: { 'Content-Type': 'text/plain' } });
+  const fullText = pick(userMessage);
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const words = fullText.split(/(\s+)/);
+      for (const word of words) {
+        controller.enqueue(encoder.encode(word));
+        await new Promise(resolve => setTimeout(resolve, 30));
+      }
+      controller.close();
+    },
+  });
+  return new NextResponse(stream, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  });
 }

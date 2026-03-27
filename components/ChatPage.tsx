@@ -110,6 +110,57 @@ const getSearchLoaderHTML = (): string => {
   `;
 };
 
+const streamFromReader = async (
+	response: Response,
+	elementContainer: HTMLElement,
+): Promise<{ success: boolean; text: string }> => {
+	if (!response.body) {
+		return { success: false, text: "" };
+	}
+
+	let accumulated = "";
+	try {
+		const reader = response.body.getReader();
+		const decoder = new TextDecoder();
+		let firstChunk = true;
+
+		// Clear any existing content in the container
+		elementContainer.innerHTML = "";
+
+		const contentDiv = document.createElement("div");
+		contentDiv.className =
+			"text-foreground break-words overflow-wrap-anywhere markdown-content text-[0.9375rem]";
+		elementContainer.appendChild(contentDiv);
+
+		while (true) {
+			const { done, value } = await reader.read();
+			if (done) break;
+
+			if (firstChunk) {
+				console.log("begin response stream");
+				firstChunk = false;
+			}
+
+			accumulated += decoder.decode(value, { stream: true });
+			const cleaned = accumulated.replace(/<think>[\s\S]*?<\/think>/gi, "");
+			contentDiv.innerHTML = parseMarkdown(cleaned);
+
+			const chatLog = document.getElementById("chat-log");
+			chatLog?.scrollTo(0, chatLog.scrollHeight);
+		}
+
+		// Flush remaining bytes
+		accumulated += decoder.decode();
+		const cleaned = accumulated.replace(/<think>[\s\S]*?<\/think>/gi, "");
+		contentDiv.innerHTML = parseMarkdown(cleaned);
+
+		return { success: true, text: accumulated };
+	} catch (error) {
+		console.warn("Stream reading failed, reverting to simulated stream", error);
+		return { success: false, text: accumulated };
+	}
+};
+
 const streamText = async (
 	text: string,
 	elementContainer: HTMLElement,
@@ -588,12 +639,32 @@ export default function ChatPage({ isDev = false }: ChatPageProps) {
 									if (!streamContainer)
 										throw new Error("Failed to create stream container");
 
-									const data = await response.text();
-									await streamText(
-										data,
+									// Try real streaming; fall back to simulated streaming on failure
+									const streamResult = await streamFromReader(
+										response,
 										streamContainer as HTMLElement,
-										isDev ? 90 : 60,
 									);
+
+									let data: string;
+									if (streamResult.success) {
+										data = streamResult.text;
+									} else {
+										// Revert to fake streaming illusion
+										data = streamResult.text;
+										if (!data) {
+											try {
+												data = await response.text();
+											} catch {
+												data = "Error: Failed to read response";
+											}
+										}
+										(streamContainer as HTMLElement).innerHTML = "";
+										await streamText(
+											data,
+											streamContainer as HTMLElement,
+											isDev ? 90 : 60,
+										);
+									}
 
 									if (messageDiv) {
 										const feedbackDiv = document.createElement("div");
