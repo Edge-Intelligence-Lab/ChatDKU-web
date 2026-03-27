@@ -30,10 +30,8 @@ const About: React.FC<AboutProps> = () => {
 					<div className="mt-4">
 						<DynamicLogo height={64} width={64} />
 					</div>
-
 					<h1 className="mt-4 font-bold text-2xl">About ChatDKU</h1>
 				</div>
-
 				<ol className="list-decimal mt-6 space-y-2 pl-5">
 					<li className="text-xs md:text-md">
 						ChatDKU, Duke Kunshan University’s dedicated AI chatbot, is designed
@@ -75,7 +73,7 @@ const About: React.FC<AboutProps> = () => {
 					<Image
 						src="/logos/BL_Edge Intelligence Lab_04.png"
 						alt="Edge Intelligence Lab logo."
-						width={300}
+						width={250}
 						height={50}
 						className="mt-2 mb-2"
 					/>
@@ -84,7 +82,7 @@ const About: React.FC<AboutProps> = () => {
 					<Image
 						src="/logos/BL_Edge Intelligence Lab_06.png"
 						alt="Edge Intelligence Lab logo dark."
-						width={300}
+						width={250}
 						height={50}
 						className="mt-2 mb-2"
 					/>
@@ -95,7 +93,6 @@ const About: React.FC<AboutProps> = () => {
 				</p>
 
 				<div className="flex flex-col lg:flex-row items-center space-x-2 mb-4 space-y-2 mt-5">
-					{" "}
 					<Dialog>
 						<DialogTrigger asChild className="cursor-pointer">
 							<Button variant="outline">View Terms and Conditions</Button>
@@ -282,13 +279,13 @@ const About: React.FC<AboutProps> = () => {
 						</DialogContent>
 					</Dialog>
 					<Link href="/ChatDKU-1.0_Introduction.pdf">
-						<Button variant={"outline"} className=" flex flex-row items-center">
+						<Button variant="outline">
 							Get the Guidebook
 							<ArrowUpRight />
 						</Button>
 					</Link>
 					<Link href="/team-credits">
-						<Button variant="outline" className="flex flex-row items-center">
+						<Button variant="outline" className="mb-2">
 							Credits
 						</Button>
 					</Link>

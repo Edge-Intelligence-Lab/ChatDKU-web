@@ -37,17 +37,17 @@ export default function AboutPage() {
 
 	return (
 		<div className="relative w-screen h-screen">
-			<div className="absolute left-0 top-0 w-1/2 h-full overflow-hidden">
+			<div className="absolute left-0 top-0 w-full md:w-1/2 h-[20vh] md:h-full overflow-hidden  rounded-b-2xl md:rounded-r-2xl">
 			<Image 
-				src={"/campus.jpg"} 
+				src={"/ADBVC-2.jpg"} 
 				alt="Photo of DKU campus." 
 				fill
-				className="object-cover object-bottom md:rounded-r-2xl"
+				className="object-cover md:object-bottom"
 				sizes="50vw"
 				priority
 			/>
 			</div>
-			<div className="flex flex-col items-center absolute right-0 top-0 w-1/2 h-full overflow-scroll">
+			<div className="flex flex-col items-center md:absolute right-0 translate-y-[18vh] md:translate-y-0 top-0 md:top-0 md:w-1/2 md:h-full overflow-scroll">
 				<About /> 
 				<div className="flex flex-col items-center">
 					<div className="flex items-center space-x-2">
@@ -105,7 +105,6 @@ export default function AboutPage() {
 						</Tooltip>
 					</TooltipProvider>
 				</div>
-				<Link href="https://www.anar-n.com" className="text-xs text-left w-full mt-auto pl-6 pb-2 opacity-25 hidden md:block">Photo © Anar Nyambayar 2025</Link>
 			</div>
 		</div>
 	);
