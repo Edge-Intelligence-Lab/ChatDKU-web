@@ -4,7 +4,7 @@ import { Navbar } from "@/components/navbar";
 export default function AboutPage() {
 	return (
 		<div>
-			<Navbar />
+			{/* <Navbar /> */}
 			<div className="flex flex-col items-center mt-16">
 				<About />
 			</div>

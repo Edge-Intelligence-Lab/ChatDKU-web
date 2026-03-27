@@ -1,5 +1,5 @@
 "use client";
-import About from "@/components/about";
+import About, { TermsButton } from "@/components/about";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { getNewSession } from "@/lib/convosNew";
@@ -14,7 +14,14 @@ import {
 } from "@/components/ui/tooltip";
 import Link from "next/link";
 import Image from "next/image";
-import { Copyright } from "lucide-react";
+import { Cormorant_Garamond } from "next/font/google";
+import { ModeToggle } from "@/components/ui/mode-toggle";
+
+const cgaramond = Cormorant_Garamond({
+	variable: "--font-garamond",
+	display: "swap",
+	subsets: ["latin"],
+})
 
 export default function AboutPage() {
 	const [termsAccepted, setTermsAccepted] = useState(false);
@@ -37,19 +44,38 @@ export default function AboutPage() {
 
 	return (
 		<div className="relative w-screen h-screen">
-			<div className="absolute left-0 top-0 w-full md:w-1/2 h-[20vh] md:h-full overflow-hidden  rounded-b-2xl md:rounded-r-2xl">
+			<div className="absolute left-0 top-0 w-full md:w-1/2 h-[20vh] md:h-full overflow-hidden ">
 			<Image 
 				src={"/ADBVC-2.jpg"} 
 				alt="Photo of DKU campus." 
 				fill
-				className="object-cover md:object-bottom"
-				sizes="50vw"
+				className="object-cover md:object-bottom rounded-4xl p-3 animate-in fade-in-30 duration-200 drop-shadow-md"
 				priority
 			/>
 			</div>
-			<div className="flex flex-col items-center md:absolute right-0 translate-y-[18vh] md:translate-y-0 top-0 md:top-0 md:w-1/2 md:h-full overflow-scroll">
-				<About /> 
-				<div className="flex flex-col items-center">
+			<div className="flex flex-col items-center md:absolute right-0 translate-y-[20vh] md:translate-y-0 top-0 md:top-0 md:w-1/2 md:h-full overflow-scroll space-y-4 justify-between">
+				{/* <About />  */}
+				<div className="w-full flex flex-row items-center justify-between p-3 sm:p-5">
+					<h1 className="text-3xl flex">
+					<Image 
+						src="/logos/new_logo.svg"
+						alt="ChatDKU logo"
+						width={40}
+						height={40}
+					/>
+					<b className="ml-1.5">ChatDKU</b>
+					</h1>
+					<div className="space-x-2">
+					<Link href={"/about"}><Button variant="link">About</Button></Link>
+					<Link href={"/team-credits"}><Button variant="link">Team</Button></Link>
+					{/* <ModeToggle /> */}
+					</div>
+				</div>
+				<div className="mx-5 my-20 max-w-[500]">
+					<h1 className={`text-5xl font-lighter text-center font-serif drop-shadow-2xl drop-shadow-green-300/20 fade-slide-in ${cgaramond.variable}`}>Navigating university has never been easier.</h1>
+				</div>
+				<div className="flex flex-col items-center space-y-4 outline p-10 rounded-3xl shadow">
+					<TermsButton />
 					<div className="flex items-center space-x-2">
 						<Checkbox
 							id="terms"
@@ -65,17 +91,19 @@ export default function AboutPage() {
 						</label>
 					</div>
 
-					<p className="text-xs text-muted-foreground mt-2">
+					<p className="text-xs text-muted-foreground">
 						We save a cookie to remember your preferences.
 					</p>
+					</div>
 
+					<div>
 					<TooltipProvider>
 						<Tooltip>
-							<TooltipTrigger asChild className="my-8">
-								<div className="flex items-center space-x-2">
+							<TooltipTrigger asChild>
+								<div className="flex flex-col sm:flex-row items-center space-x-2 space-y-2 mt-4">
 									<Button
 										variant="secondary"
-										className="rounded-full"
+										className="rounded-full p-6 border border-foreground/10"
 										disabled={!termsAccepted}
 										onClick={handleProceed}
 									>
@@ -87,7 +115,7 @@ export default function AboutPage() {
 									<Link href={"https://chatdku.dukekunshan.edu.cn/"}>
 									<Button
 										variant="default"
-										className="rounded-full"
+										className="rounded-full p-6 -mt-2 bg-blue-700 text-white hover:bg-blue-500 border border-blue-300/30"
 										disabled={!termsAccepted}
 									>
 										<p>
@@ -105,6 +133,7 @@ export default function AboutPage() {
 						</Tooltip>
 					</TooltipProvider>
 				</div>
+				<div className="p-2 text-xs opacity-50 mt-10 w-full text-end">2026 Edge Intelligence Lab</div>
 			</div>
 		</div>
 	);

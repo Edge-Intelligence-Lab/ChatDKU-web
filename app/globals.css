@@ -321,3 +321,19 @@
 .markdown-content img {
   @apply max-w-full h-auto my-2 rounded-md;
 }
+
+@keyframes fadeSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px); /* Starts below */
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0); /* Ends in place */
+  }
+}
+
+.fade-slide-in {
+  animation: fadeSlideIn 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
