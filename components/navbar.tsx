@@ -52,7 +52,7 @@ export function Navbar() {
             )}
             {!isDevRoute && (
               // <span className="font-inter text-xs md:text-sm lg:text-sm italic text-primary/20">dev</span>
-              <Badge variant="default">Student</Badge>
+              <Badge variant="default">Public</Badge>
             )}
           </h2>
         </div>

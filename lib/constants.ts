@@ -1,5 +1,5 @@
 const isDevMode = process.env.NODE_ENV === 'development';
-const apiBaseUrl = isDevMode ? 'http://localhost:3000' : 'https://chatdku.dukekunshan.edu.cn';
+const apiBaseUrl = isDevMode ? 'http://localhost:3000' : 'https://chatdku.dukekunshan.edu.cn:8007'; // Port 8007 is for the public-facing server.
 
 export const API_ENDPOINTS = {
     USER: `${apiBaseUrl}/user`,

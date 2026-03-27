@@ -12,6 +12,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Link from "next/link";
 
 export default function AboutPage() {
 	const [termsAccepted, setTermsAccepted] = useState(false);
@@ -36,7 +37,7 @@ export default function AboutPage() {
 		<div>
 			<div className="flex flex-col items-center">
 				{/* Without showing "Credits" button */}
-				<About showCredits={false} /> 
+				<About showCredits={true} /> 
 				<div className="flex flex-col items-center">
 					<div className="flex items-center space-x-2">
 						<Checkbox
@@ -60,17 +61,29 @@ export default function AboutPage() {
 					<TooltipProvider>
 						<Tooltip>
 							<TooltipTrigger asChild className="my-8">
-								<div>
+								<div className="flex items-center space-x-2">
 									<Button
-										variant="default"
+										variant="secondary"
 										className="rounded-full"
 										disabled={!termsAccepted}
 										onClick={handleProceed}
 									>
 										<p>
-											Proceed to <span className="font-bold">ChatDKU</span>
+											Proceed as <span className="font-bold">guest</span>
 										</p>
 									</Button>
+									<p className="opacity-80">or</p>
+									<Link href={"https://chatdku.dukekunshan.edu.cn/"}>
+									<Button
+										variant="default"
+										className="rounded-full"
+										disabled={!termsAccepted}
+									>
+										<p>
+											Log in with <span className="font-bold">Duke NetID</span>
+										</p>
+									</Button>
+									</Link>
 								</div>
 							</TooltipTrigger>
 							{!termsAccepted && (

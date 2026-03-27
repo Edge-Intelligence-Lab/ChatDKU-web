@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { BackButton } from "@/components/backButton";
 
 type MemberProps = {
   name: string;
@@ -104,9 +104,7 @@ export default function TeamCreditsPage() {
       <div className="w-10/12 max-w-4xl space-y-10">
         {/* Back Button */}
         <div className="flex justify-end">
-          <Link href="/about">
-            <Button variant="outline">← Back to About</Button>
-          </Link>
+          <BackButton />
         </div>
 
         <div className="flex items-center justify-center gap-4 mb-6">

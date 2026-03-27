@@ -561,7 +561,7 @@ export default function ChatPage({ isDev = false }: ChatPageProps) {
 										}
 										const url = isDev
 											? apiEndpoint
-											: "https://chatdku.dukekunshan.edu.cn/api/chat";
+											: "https://chatdku.dukekunshan.edu.cn:8007/api/chat";
 										return fetch(url, {
 											method: "POST",
 											headers: { "Content-Type": "application/json" },

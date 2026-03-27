@@ -1,3 +1,5 @@
+"use client";
+
 import {
 	ChevronRight,
 	FileText,
@@ -7,6 +9,7 @@ import {
 	SquarePen,
 	MoreHorizontal,
 	Trash2,
+	LogIn,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
@@ -231,6 +234,17 @@ export default function Side({
 									About ChatDKU
 								</Button>
 							</Link>
+							
+							<Link href="https://chatdku.dukekunshan.edu.cn/">
+								<Button
+									variant="inChatbox"
+									className="w-full justify-start"
+									disabled={disabled}
+								>
+									<LogIn />
+									Login with Duke NetID
+								</Button>
+							</Link>
 
 							<div className={cn(!isDevRoute && "hidden")}>
 								<p className="ml-2 mt-4 text-sm text-muted-foreground">
@@ -241,6 +255,13 @@ export default function Side({
 									onEndpointChange={onEndpointChange ?? (() => {})}
 								/>
 							</div>
+							<TooltipProvider>
+							<Tooltip>
+								<TooltipContent>
+									History not saved for guest users.
+								</TooltipContent>
+							<TooltipTrigger className="text-left opacity-50 cursor-not-allowed">
+								<div>
 							<p className="ml-2 mt-4 text-sm text-muted-foreground">
 								Chat History
 							</p>
@@ -252,7 +273,7 @@ export default function Side({
 									disabled={disabled}
 								/>
 							</div>
-							<ScrollArea className="flex-1 min-h-0">
+							<ScrollArea className="flex-1 min-h-0 pointer-events-none">
 								<div className="space-y-1 pb-4">
 									{(searchQuery.trim() ? filteredConversations : conversations)
 										.length > 0 ? (
@@ -293,7 +314,7 @@ export default function Side({
 													</div>
 												</div>
 
-												<DropdownMenu
+												{/* <DropdownMenu
 													onOpenChange={(open) =>
 														setActiveMenuId(open ? conversation.id : null)
 													}
@@ -322,8 +343,8 @@ export default function Side({
 															<Trash2 className="h-4 w-4 text-red-500 group-hover:text-foreground" />
 															Delete
 														</DropdownMenuItem>
-													</DropdownMenuContent>
-												</DropdownMenu>
+													</DropdownMenuContent> 
+												</DropdownMenu> */}
 											</div>
 										))
 									) : (
@@ -335,6 +356,10 @@ export default function Side({
 									)}
 								</div>
 							</ScrollArea>
+							</div>
+							</TooltipTrigger>
+							</Tooltip>
+							</TooltipProvider>
 						</div>
 					</SheetContent>
 				</Sheet>

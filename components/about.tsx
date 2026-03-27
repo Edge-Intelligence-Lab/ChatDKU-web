@@ -304,12 +304,9 @@ const About: React.FC<AboutProps> = ({ showCredits = true }) => {
   						<Link href="/team-credits">
    							<Button variant="outline" className="flex flex-row items-center">
     							Credits
-  						 	 	<ArrowUpRight />
   							</Button>
  						</Link>
 					)}
-
-
 				</div>
 			</div>
 		</>
