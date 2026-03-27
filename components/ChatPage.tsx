@@ -561,10 +561,13 @@ export default function ChatPage({ isDev = false }: ChatPageProps) {
 										}
 										const url = isDev
 											? apiEndpoint
-											: "https://chatdku.dukekunshan.edu.cn:8007/api/chat";
+											: "https://chatdku.dukekunshan.edu.cn/public/chat";
 										return fetch(url, {
 											method: "POST",
-											headers: { "Content-Type": "application/json" },
+											headers: {
+												"Content-Type": "application/json",
+												"X-PUBLIC-USER": "true",
+											},
 											body: JSON.stringify({
 												messages: [{ role: "user", content: value }],
 												chatHistoryId: sessionId,
