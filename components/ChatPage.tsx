@@ -63,7 +63,7 @@ const ensureSearchLoaderStyles = () => {
       80%, 100% { opacity: 0.2; }
     }
     .cdku-loader .icon-cycle { animation: iconCycle 2400ms linear infinite; }
-    .cdku-loader .sudo bash deploy.shicon-1 { animation-delay: 0ms; }
+    .cdku-loader .icon-1 { animation-delay: 0ms; }
     .cdku-loader .icon-2 { animation-delay: 480ms; }
     .cdku-loader .icon-3 { animation-delay: 960ms; }
     .cdku-loader .icon-4 { animation-delay: 1440ms; }
