@@ -11,7 +11,7 @@ type MemberProps = {
   team: string;
   role: string;
   avatar?: string;
-  showContribution?: boolean; 
+  showContribution?: boolean;
 };
 
 function MajorMember({
@@ -43,17 +43,19 @@ function MajorMember({
           {name} · {classYear}
         </p>
         <p className="text-sm text-muted-foreground">{team}</p>
-    
 
         {/* Contribution */}
         {showContribution && (
           <div className="mt-2 text-sm">
             <p
-                className={expanded ? "whitespace-pre-line" : "line-clamp-2 whitespace-pre-line"}
+              className={
+                expanded
+                  ? "whitespace-pre-line"
+                  : "line-clamp-2 whitespace-pre-line"
+              }
             >
               {role}
             </p>
-
 
             <Button
               variant="link"
@@ -78,7 +80,7 @@ function GridMember({
   name: string;
   classYear: string;
   avatar?: string;
-  team?: string; 
+  team?: string;
 }) {
   return (
     <div className="flex flex-col items-center gap-2">
@@ -93,7 +95,7 @@ function GridMember({
       <p className="text-xs text-muted-foreground">{classYear}</p>
       {team && (
         <p className="text-xs text-muted-foreground text-center">{team}</p>
-        )}
+      )}
     </div>
   );
 }
@@ -108,19 +110,15 @@ export default function TeamCreditsPage() {
         </div>
 
         <div className="flex items-center justify-center gap-4 mb-6">
-
-            <Image
-                src="/logos/new_logo.svg"
-                alt="ChatDKU Logo"
-                width={60}
-                height={60}
-                className="object-contain"
-            />
-            <h1 className="text-3xl font-bold">
-                Credits
-            </h1>
+          <Image
+            src="/logos/new_logo.svg"
+            alt="ChatDKU Logo"
+            width={60}
+            height={60}
+            className="object-contain"
+          />
+          <h1 className="text-3xl font-bold">Credits</h1>
         </div>
-
 
         {/* Core Members */}
         <section className="space-y-4">
@@ -157,7 +155,6 @@ export default function TeamCreditsPage() {
                 - Migrated the web application to HTTPS.
                 - Performed various bug fixes and optimizations.
                 `}
-
           />
 
           <MajorMember
@@ -204,27 +201,62 @@ export default function TeamCreditsPage() {
           />
         </section>
 
-        {/* Alumni */}
-        <section className="space-y-4">
-          <h2 className="text-xl font-semibold">Alumni</h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <GridMember name="Yuxiang Lin" classYear="Class of 2026" avatar="/avatars/Yuxiang.jpeg"/>
-            <GridMember name="Chenshuhao(Cody)Qin" classYear="Class of 2025" avatar="/avatars/Chenshuhao.jpg"/>
-            <GridMember name="Ningyuan Yang" classYear="Class of 2026" avatar="/avatars/Ningyuan.jpg"/>
-          </div>
-        </section>
-
         {/* New Members */}
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">New Members</h2>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-6">
-            <GridMember name="Youran Wang" classYear="Class of 2029" team="Backend / Databases / Agent Team Member" avatar="/avatars/Youran.jpg"/>
-            <GridMember name="Ruihan Yin" classYear="Class of 2028" team="Frontend / Agent Team Member" avatar="/avatars/RuihanYin.jpg"/>
-            <GridMember name="Zeyu Yu" classYear="Class of 2028" avatar="/avatars/Zeyu.jpg"/>
-            <GridMember name="Haroon Butt" classYear="Class of 2029" avatar="/avatars/Haroon.jpg"/>
-            <GridMember name="Jingxuan Lin" classYear="Class of 2029" team="Backend / Agent Team Member" avatar="/avatars/Jingxuan.jpg"/>
+            <GridMember
+              name="Ruihan Yin"
+              classYear="Class of 2028"
+              team="Frontend / Agent Team Member"
+              avatar="/avatars/RuihanYin.jpg"
+            />
+            <GridMember
+              name="Zeyu Yu"
+              classYear="Class of 2028"
+              avatar="/avatars/Zeyu.jpg"
+            />
+            <GridMember
+              name="Kurtis Kwan"
+              classYear="Class of 2027"
+              team="Agent Team Member"
+              avatar="/avatars/Kurtis.jpeg"
+            />
+            <GridMember
+              name="Haroon Butt"
+              classYear="Class of 2029"
+              avatar="/avatars/Haroon.jpg"
+            />
+            <GridMember
+              name="Jingxuan Lin"
+              classYear="Class of 2029"
+              team="Backend / Agent Team Member"
+              avatar="/avatars/Jingxuan.jpg"
+            />
+          </div>
+        </section>
+
+        {/* Alumni */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">Alumni</h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <GridMember
+              name="Yuxiang Lin"
+              classYear="Class of 2026"
+              avatar="/avatars/Yuxiang.jpeg"
+            />
+            <GridMember
+              name="Chenshuhao(Cody)Qin"
+              classYear="Class of 2025"
+              avatar="/avatars/Chenshuhao.jpg"
+            />
+            <GridMember
+              name="Ningyuan Yang"
+              classYear="Class of 2026"
+              avatar="/avatars/Ningyuan.jpg"
+            />
           </div>
         </section>
       </div>
