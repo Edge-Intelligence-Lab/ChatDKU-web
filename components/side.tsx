@@ -1,14 +1,10 @@
 "use client";
 
 import {
-	ChevronRight,
-	FileText,
 	Menu,
 	MessageCircle,
 	MessageCircleQuestion,
 	SquarePen,
-	MoreHorizontal,
-	Trash2,
 	LogIn,
 } from "lucide-react";
 import { Button } from "./ui/button";
@@ -60,25 +56,19 @@ import {
 } from "@/components/ui/tooltip";
 
 interface SidebarProps {
-	onDocumentManager: () => void;
 	onEndpointChange?: (endpoint: string) => void;
-	currentSessionId?: string;
 	onNewChat: () => void;
 	onConversationSelect: (sessionId: string) => void;
 
 	currentEndpoint?: string;
-	disabled?: boolean;
 }
 
 export default function Side({
-	onDocumentManager,
 	onEndpointChange,
-	currentSessionId,
 	onNewChat,
 	onConversationSelect,
 
 	currentEndpoint,
-	disabled = false,
 }: SidebarProps) {
 	const pathname = usePathname();
 	const isDevRoute = pathname === "/dev" || pathname === "/dev/";
@@ -95,14 +85,6 @@ export default function Side({
 	const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 	const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-	useEffect(() => {
-		if (!currentSessionId) return;
-		const loadConversations = async () => {
-			const convos = await getConversations();
-			setConversations(convos);
-		};
-		loadConversations();
-	}, [currentSessionId]);
 
 	// Keep filtered list in sync with base conversations when no search
 	useEffect(() => {
@@ -175,7 +157,7 @@ export default function Side({
 		if (success) {
 			setConversations((prev) => prev.filter((c) => c.id !== id));
 
-			if (currentSessionId === id) {
+			if (false) {
 				onNewChat();
 			}
 		} else {
@@ -205,31 +187,16 @@ export default function Side({
 								variant="inChatbox"
 								className="w-full justify-start"
 								onClick={onNewChat}
-								disabled={disabled}
 							>
 								<SquarePen />
 								New Chat
 							</Button>
 
-							<div className={cn(!isDevRoute && "hidden")}>
-								<Button
-									variant="inChatbox"
-									onClick={onDocumentManager}
-									className="w-full justify-start"
-									disabled={disabled}
-								>
-									<FileText />
-									Document Manager
-									<ChevronRight className="ml-auto" />
-								</Button>
-							</div>
-
 							<Link href="/about">
 								<Button
 									variant="inChatbox"
 									className="w-full justify-start"
-									disabled={disabled}
-								>
+									>
 									<MessageCircleQuestion />
 									About ChatDKU
 								</Button>
@@ -239,8 +206,7 @@ export default function Side({
 								<Button
 									variant="inChatbox"
 									className="w-full justify-start"
-									disabled={disabled}
-								>
+									>
 									<LogIn />
 									Login with Duke NetID
 								</Button>
@@ -270,8 +236,7 @@ export default function Side({
 									placeholder="Search chats"
 									value={searchQuery}
 									onChange={(e) => setSearchQuery(e.target.value)}
-									disabled={disabled}
-								/>
+									/>
 							</div>
 							<ScrollArea className="flex-1 min-h-0 pointer-events-none">
 								<div className="space-y-1 pb-4">
@@ -285,7 +250,7 @@ export default function Side({
 												key={conversation.id}
 												className={cn(
 													"group w-[97%] flex items-center justify-between p-2 pl-3 rounded-md hover:bg-sidebar-accent",
-													currentSessionId === conversation.id &&
+													false &&
 														"bg-sidebar-accent",
 												)}
 											>

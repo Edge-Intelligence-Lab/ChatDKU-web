@@ -62,15 +62,6 @@ jest.mock('@/components/WelcomeBanner', () => ({
   default: () => <div data-testid="welcome-banner">Welcome</div>,
 }));
 
-jest.mock('@/components/doc-manager', () => ({
-  DocumentManager: ({ open, onOpenChange }: any) => (
-    <div>
-      {open && <div data-testid="document-manager">Document Manager</div>}
-      <button onClick={() => onOpenChange(!open)}>Toggle Docs</button>
-    </div>
-  ),
-}));
-
 jest.mock('@/components/prompt_recs', () => ({
   PromptRecs: ({ onPromptSelect }: any) => (
     <div>

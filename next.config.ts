@@ -26,14 +26,6 @@ const nextConfig: NextConfig = {
             destination: 'https://chatdku.dukekunshan.edu.cn/api/:path*',
           },
           {
-            source: '/user/:path*',
-            destination: 'https://chatdku.dukekunshan.edu.cn/user/:path*',
-          },
-          {
-            source: '/user_files/:path*',
-            destination: 'https://chatdku.dukekunshan.edu.cn/user_files/:path*',
-          },
-          {
             source: '/dev/:path*',
             destination: 'https://chatdku.dukekunshan.edu.cn/dev/:path*',
           },

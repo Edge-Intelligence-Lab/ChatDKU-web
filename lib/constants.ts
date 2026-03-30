@@ -4,11 +4,9 @@ const apiBaseUrl = isDevMode
 	: "https://chatdku.dukekunshan.edu.cn/public"; // Port is for the public-facing server.
 
 export const API_ENDPOINTS = {
-	USER: `${apiBaseUrl}/user`,
 	CHAT_DEFAULT: `${apiBaseUrl}/chat`,
 	CHAT_DEV1: `${apiBaseUrl}/dev/ant/chat`,
 	CHAT_DEV2: `${apiBaseUrl}/dev/qwen/chat`,
-	FILE_UPLOAD: `${apiBaseUrl}/user_files`,
 	DICTATION_WS: isDevMode
 		? "ws://localhost:8007"
 		: "wss://chatdku.dukekunshan.edu.cn:8007",

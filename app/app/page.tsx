@@ -4,21 +4,12 @@ import { useState, useCallback, useEffect, SetStateAction } from "react";
 import { marked } from "marked";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import {
-	getNewSession,
-	getCurrentSessionId,
-	clearSessionId,
-	getStoredEndpoint,
-	getSessionMessages,
-} from "@/lib/convosNew";
+import { getStoredEndpoint } from "@/lib/convosNew";
 import { AIInput } from "@/components/ui/ai-input";
 import { Navbar } from "@/components/navbar";
 import { PromptRecs } from "@/components/prompt_recs";
 import WelcomeBanner from "@/components/WelcomeBanner";
 import Side from "@/components/side";
-import { DocumentManager } from "@/components/doc-manager";
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const configureMarked = () => {
 	marked.setOptions({
@@ -221,84 +212,20 @@ export default function App() {
 
 	const [showStarter, setShowStarter] = useState(true);
 	const [isChatboxCentered, setIsChatboxCentered] = useState(true);
-	const [chatHistoryId, setChatHistoryId] = useState("");
-	const [currentSessionId, setCurrentSessionId] = useState<string>("");
+	const [chatHistory, setChatHistory] = useState<[string, string][]>([]);
 	const [thinkingMode, setThinkingMode] = useState(false);
 	const [searchMode, setSearchMode] = useState("");
 	const [inputValue, setInputValue] = useState("");
 	const [apiEndpoint, setApiEndpoint] = useState(getStoredEndpoint());
 	const router = useRouter();
-	const [showDocumentManager, setShowDocumentManager] = useState(false);
-	const [isSessionLoading, setIsSessionLoading] = useState(true);
-	const [sessionError, setSessionError] = useState<string | null>(null);
 
 	useEffect(() => {
 		configureMarked();
-		let isMounted = true;
-
-		const prepareSession = async () => {
-			const termsAccepted = Cookies.get("terms_accepted");
-			if (!termsAccepted) {
-				setIsSessionLoading(false);
-				router.push("/login");
-				return;
-			}
-
-			setSessionError(null);
-			setIsSessionLoading(true);
-
-			try {
-				const storedSession = getCurrentSessionId();
-				if (storedSession) {
-					if (isMounted) {
-						setCurrentSessionId(storedSession);
-						setChatHistoryId(storedSession);
-					}
-				} else {
-					const newSession = await getNewSession();
-					if (!isMounted) return;
-					if (newSession) {
-						setCurrentSessionId(newSession);
-						setChatHistoryId(newSession);
-					} else {
-						setSessionError(
-							"We couldn't start a chat session. Try refreshing the page.",
-						);
-					}
-				}
-			} catch (error) {
-				console.error("Error preparing session:", error);
-				if (isMounted) {
-					setSessionError(
-						"We couldn't start a chat session. Try refreshing the page.",
-					);
-				}
-			} finally {
-				if (isMounted) {
-					setIsSessionLoading(false);
-				}
-			}
-		};
-
-		void prepareSession();
-
-		return () => {
-			isMounted = false;
-		};
+		const termsAccepted = Cookies.get("terms_accepted");
+		if (!termsAccepted) {
+			router.push("/login");
+		}
 	}, [router]);
-
-	const handleRetrySession = useCallback(() => {
-		clearSessionId();
-		window.location.reload();
-	}, []);
-
-	const isSessionReady =
-		Boolean(currentSessionId) && !isSessionLoading && !sessionError;
-	const sessionPlaceholder = isSessionLoading
-		? "Preparing your chat session..."
-		: sessionError
-			? "Session unavailable. Please try again."
-			: "Type your message...";
 
 	const handleFeedback = useCallback(
 		async (userInput: any, answer: any, reason: any) => {
@@ -312,14 +239,13 @@ export default function App() {
 						userInput,
 						botAnswer: answer,
 						feedbackReason: reason,
-						chatHistoryId,
 					}),
 				});
 			} catch (error) {
 				console.error("Failed to save feedback:", error);
 			}
 		},
-		[chatHistoryId],
+		[],
 	);
 
 	const addMessageToChat = useCallback(
@@ -404,83 +330,20 @@ export default function App() {
 	return (
 		<>
 			<Side
-				onDocumentManager={() => {
-					setShowDocumentManager(true);
-				}}
 				onEndpointChange={setApiEndpoint}
 				currentEndpoint={apiEndpoint}
-				currentSessionId={currentSessionId}
-				disabled={!isSessionReady}
-				onNewChat={async () => {
+				onNewChat={() => {
 					setShowStarter(true);
 					setIsChatboxCentered(true);
-					setSessionError(null);
-					setIsSessionLoading(true);
-					try {
-						const newSessionId = await getNewSession();
-						if (newSessionId) {
-							setCurrentSessionId(newSessionId);
-							setChatHistoryId(newSessionId);
-							const chatLog = document.getElementById("chat-log");
-							if (chatLog) {
-								chatLog.innerHTML = "";
-							}
-						} else {
-							setSessionError(
-								"We couldn't start a new chat session. Please try again.",
-							);
-						}
-					} catch (error) {
-						console.error("Error starting new chat:", error);
-						setSessionError(
-							"We couldn't start a new chat session. Please try again.",
-						);
-					} finally {
-						setIsSessionLoading(false);
-					}
-				}}
-				onConversationSelect={async (sessionId) => {
-					setShowStarter(false);
-					setIsChatboxCentered(false);
-					setCurrentSessionId(sessionId);
-					setChatHistoryId(sessionId);
-
+					setChatHistory([]);
 					const chatLog = document.getElementById("chat-log");
 					if (chatLog) {
 						chatLog.innerHTML = "";
 					}
-
-					const messages = await getSessionMessages(sessionId);
-					messages.forEach((msg) => {
-						addMessageToChat(
-							msg.role.toLowerCase(),
-							msg.content,
-							"text-sm",
-							false,
-						);
-					});
 				}}
+				onConversationSelect={() => {}}
 			/>
 			<div className="flex flex-col min-h-screen relative selection:bg-zinc-800 selection:text-white dark:selection:bg-white dark:selection:text-black">
-				{(isSessionLoading || sessionError) && (
-					<div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background/85 backdrop-blur-sm">
-						{isSessionLoading ? (
-							<>
-								<Loader2 className="h-8 w-8 animate-spin text-foreground" />
-								<p className="text-sm text-muted-foreground">
-									Preparing your chat session...
-								</p>
-							</>
-						) : (
-							<>
-								<p className="text-sm text-muted-foreground max-w-xs text-center">
-									{sessionError}
-								</p>
-								<Button onClick={handleRetrySession}>Try again</Button>
-							</>
-						)}
-					</div>
-				)}
 				<header className="sticky top-0 z-20 w-full">
 					<Navbar />
 				</header>
@@ -508,8 +371,7 @@ export default function App() {
 					)}
 					<div>
 						<AIInput
-							disabled={!isSessionReady}
-							placeholder={sessionPlaceholder}
+							placeholder="Type your message..."
 							thinkingMode={thinkingMode}
 							onThinkingModeChange={(value) => setThinkingMode(value)}
 							searchMode={searchMode}
@@ -524,22 +386,6 @@ export default function App() {
 								setShowStarter(false);
 								setIsChatboxCentered(false);
 
-								const activeSessionId =
-									currentSessionId || getCurrentSessionId() || "";
-								if (!activeSessionId) {
-									setSessionError(
-										"We couldn't find an active chat session. Please try again.",
-									);
-									return;
-								}
-
-								if (currentSessionId !== activeSessionId) {
-									setCurrentSessionId(activeSessionId);
-								}
-								if (chatHistoryId !== activeSessionId) {
-									setChatHistoryId(activeSessionId);
-								}
-
 								addMessageToChat(
 									"user",
 									value.trim(),
@@ -553,23 +399,9 @@ export default function App() {
 								);
 
 								try {
-									const fetchChat = async (sessionId: string) => {
+									const fetchChat = async () => {
 										if (value.trim().toLowerCase() === "test") {
 											return fetch("/mdtest.md");
-										}
-										// Collect chat history from the DOM
-										const chatLogEl = document.getElementById("chat-log");
-										const history: [string, string][] = [];
-										if (chatLogEl) {
-											const messageDivs = chatLogEl.querySelectorAll(":scope > div");
-											messageDivs.forEach((div) => {
-												const isUser = div.querySelector(".items-end") !== null;
-												const contentEl = div.querySelector(".markdown-content");
-												const content = contentEl?.textContent?.trim() || "";
-												if (content) {
-													history.push([isUser ? "user" : "assistant", content]);
-												}
-											});
 										}
 										return fetch("/api/chat", {
 											method: "POST",
@@ -578,22 +410,15 @@ export default function App() {
 											},
 											body: JSON.stringify({
 												messages: [{ role: "user", content: value }],
-												history,
+												history: chatHistory,
 											}),
 										});
 									};
 
-									let response = await fetchChat(activeSessionId);
+									// Add user message to history
+									setChatHistory((prev) => [...prev, ["user", value.trim()]]);
 
-									// On server error, refresh session token and retry once
-									if (!response.ok) {
-										const newSession = await getNewSession();
-										if (newSession) {
-											setCurrentSessionId(newSession);
-											setChatHistoryId(newSession);
-											response = await fetchChat(newSession);
-										}
-									}
+									const response = await fetchChat();
 
 									if (!response.ok) throw new Error("Failed to fetch response");
 
@@ -639,6 +464,9 @@ export default function App() {
 											isDev ? 90 : 60,
 										);
 									}
+
+									// Add assistant response to history
+									setChatHistory((prev) => [...prev, ["assistant", data]]);
 
 									if (messageDiv) {
 										const feedbackDiv = document.createElement("div");
@@ -784,10 +612,6 @@ export default function App() {
 						</p>
 					)}
 				</div>
-				<DocumentManager
-					open={showDocumentManager}
-					onOpenChange={setShowDocumentManager}
-				/>
 			</div>
 		</>
 	);
