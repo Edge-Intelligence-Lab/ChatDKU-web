@@ -19,11 +19,10 @@ import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 
 type AboutProps = {
-  showCredits?: boolean;
+	showCredits?: boolean;
 };
 
 const About: React.FC<AboutProps> = ({ showCredits = true }) => {
-
 	const [termsAndCondition, setTermsAndCondition] = useState(false);
 	const [remarks, setRemarks] = useState(false);
 
@@ -293,23 +292,20 @@ const About: React.FC<AboutProps> = ({ showCredits = true }) => {
             </DialogFooter> */}
 						</DialogContent>
 					</Dialog>
-					<Link href="/ChatDKU-1.0_Introduction.pdf">
+					<Link href="https://chatdku.com/ChatDKU-1.0_Introduction.pdf">
 						<Button variant={"outline"} className=" flex flex-row items-center">
 							Get the Guidebook
 							<ArrowUpRight />
 						</Button>
 					</Link>
-
 					{showCredits && (
-  						<Link href="/team-credits">
-   							<Button variant="outline" className="flex flex-row items-center">
-    							Credits
-  						 	 	<ArrowUpRight />
-  							</Button>
- 						</Link>
+						<Link href="https://chatdku.com/team-credits">
+							<Button variant="outline" className="flex flex-row items-center">
+								Credits
+								<ArrowUpRight />
+							</Button>
+						</Link>
 					)}
-
-
 				</div>
 			</div>
 		</>
