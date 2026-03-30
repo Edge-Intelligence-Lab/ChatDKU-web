@@ -8,15 +8,15 @@ import {
   getStoredEndpoint,
   setStoredEndpoint,
   clearStoredEndpoint,
-} from './convosNew';
+} from "./convosNew";
 
 // Mock fetch
 global.fetch = jest.fn();
 
 // Mock document.cookie
-Object.defineProperty(document, 'cookie', {
+Object.defineProperty(document, "cookie", {
   writable: true,
-  value: '',
+  value: "",
 });
 
 // Mock localStorage
@@ -36,24 +36,24 @@ if (!global.window) {
 }
 
 // Mock localStorage on window
-Object.defineProperty(global.window, 'localStorage', {
+Object.defineProperty(global.window, "localStorage", {
   value: localStorageMock,
   writable: true,
 });
 
-describe('convosNew', () => {
+describe("convosNew", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    document.cookie = '';
+    document.cookie = "";
     localStorageMock.getItem.mockClear();
     localStorageMock.setItem.mockClear();
     localStorageMock.removeItem.mockClear();
   });
 
-  describe('Session Management', () => {
-    describe('getNewSession', () => {
-      it('creates a new session successfully', async () => {
-        const mockResponse = { session_id: 'new-session-123' };
+  describe("Session Management", () => {
+    describe("getNewSession", () => {
+      it("creates a new session successfully", async () => {
+        const mockResponse = { session_id: "new-session-123" };
         (fetch as jest.Mock).mockResolvedValue({
           ok: true,
           json: () => Promise.resolve(mockResponse),
@@ -62,40 +62,40 @@ describe('convosNew', () => {
         const result = await getNewSession();
 
         expect(fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/api/get_session'),
+          expect.stringContaining("/api/get_session"),
           expect.objectContaining({
-            method: 'GET',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-          })
+            method: "GET",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+          }),
         );
-        expect(result).toBe('new-session-123');
-        expect(document.cookie).toContain('chatdku_session_id=new-session-123');
+        expect(result).toBe("new-session-123");
+        expect(document.cookie).toContain("chatdku_session_id=new-session-123");
       });
 
-      it('handles session creation failure', async () => {
+      it("handles session creation failure", async () => {
         (fetch as jest.Mock).mockResolvedValue({
           ok: false,
           status: 500,
-          statusText: 'Internal Server Error',
+          statusText: "Internal Server Error",
         });
 
         const result = await getNewSession();
 
         expect(result).toBeNull();
-        expect(document.cookie).not.toContain('chatdku_session_id');
+        expect(document.cookie).not.toContain("chatdku_session_id");
       });
 
-      it('handles network errors', async () => {
-        (fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+      it("handles network errors", async () => {
+        (fetch as jest.Mock).mockRejectedValue(new Error("Network error"));
 
         const result = await getNewSession();
 
         expect(result).toBeNull();
       });
 
-      it('handles empty session_id response', async () => {
-        const mockResponse = { session_id: '' };
+      it("handles empty session_id response", async () => {
+        const mockResponse = { session_id: "" };
         (fetch as jest.Mock).mockResolvedValue({
           ok: true,
           json: () => Promise.resolve(mockResponse),
@@ -103,27 +103,27 @@ describe('convosNew', () => {
 
         const result = await getNewSession();
 
-        expect(result).toBe('');
-        expect(document.cookie).toContain('chatdku_session_id=');
+        expect(result).toBe("");
+        expect(document.cookie).toContain("chatdku_session_id=");
       });
     });
 
-    describe('getCurrentSessionId', () => {
-      it('retrieves session ID from cookies', () => {
-        document.cookie = 'chatdku_session_id=test-session-456; other=value';
+    describe("getCurrentSessionId", () => {
+      it("retrieves session ID from cookies", () => {
+        document.cookie = "chatdku_session_id=test-session-456; other=value";
         const result = getCurrentSessionId();
 
-        expect(result).toBe('test-session-456');
+        expect(result).toBe("test-session-456");
       });
 
-      it('returns null when no session cookie exists', () => {
-        document.cookie = 'other=value';
+      it("returns null when no session cookie exists", () => {
+        document.cookie = "other=value";
         const result = getCurrentSessionId();
 
         expect(result).toBeNull();
       });
 
-      it('returns null in server environment', () => {
+      it("returns null in server environment", () => {
         const originalWindow = global.window;
         delete (global as any).window;
 
@@ -134,22 +134,22 @@ describe('convosNew', () => {
         global.window = originalWindow;
       });
 
-      it('handles URL-encoded session IDs', () => {
-        document.cookie = 'chatdku_session_id=session%20with%20spaces';
+      it("handles URL-encoded session IDs", () => {
+        document.cookie = "chatdku_session_id=session%20with%20spaces";
         const result = getCurrentSessionId();
 
-        expect(result).toBe('session with spaces');
+        expect(result).toBe("session with spaces");
       });
     });
 
-    describe('setCurrentSessionId', () => {
-      it('sets session ID in cookies', () => {
-        setCurrentSessionId('new-session-789');
+    describe("setCurrentSessionId", () => {
+      it("sets session ID in cookies", () => {
+        setCurrentSessionId("new-session-789");
 
-        expect(document.cookie).toContain('chatdku_session_id=new-session-789');
+        expect(document.cookie).toContain("chatdku_session_id=new-session-789");
       });
 
-      it('does nothing in server environment', () => {
+      it("does nothing in server environment", () => {
         const originalWindow = global.window;
         const originalDocument = global.document;
         delete (global as any).window;
@@ -157,29 +157,31 @@ describe('convosNew', () => {
 
         // Clear any existing cookies
         if (originalDocument) {
-          originalDocument.cookie = '';
+          originalDocument.cookie = "";
         }
 
-        setCurrentSessionId('should-not-set');
+        setCurrentSessionId("should-not-set");
 
-        console.log('document after call:', typeof document, document.cookie);
-        expect(document.cookie).not.toContain('should-not-set');
+        console.log("document after call:", typeof document, document.cookie);
+        expect(document.cookie).not.toContain("should-not-set");
 
         global.window = originalWindow;
         global.document = originalDocument;
       });
     });
 
-    describe('clearSessionId', () => {
-      it('clears session ID from cookies', () => {
-        document.cookie = 'chatdku_session_id=test-session; other=value';
+    describe("clearSessionId", () => {
+      it("clears session ID from cookies", () => {
+        document.cookie = "chatdku_session_id=test-session; other=value";
         clearSessionId();
 
-        expect(document.cookie).toContain('chatdku_session_id=;');
-        expect(document.cookie).toContain('expires=Thu, 01 Jan 1970 00:00:00 GMT');
+        expect(document.cookie).toContain("chatdku_session_id=;");
+        expect(document.cookie).toContain(
+          "expires=Thu, 01 Jan 1970 00:00:00 GMT",
+        );
       });
 
-      it('does nothing in server environment', () => {
+      it("does nothing in server environment", () => {
         const originalWindow = global.window;
         delete (global as any).window;
 
@@ -190,68 +192,72 @@ describe('convosNew', () => {
     });
   });
 
-  describe('Message Management', () => {
-    describe('getSessionMessages', () => {
-      it('retrieves messages successfully', async () => {
+  describe("Message Management", () => {
+    describe("getSessionMessages", () => {
+      it("retrieves messages successfully", async () => {
         const mockMessages = [
-          { role: 'user', content: 'Hello', timestamp: '2024-01-01T00:00:00Z' },
-          { role: 'bot', content: 'Hi there!', timestamp: '2024-01-01T00:00:01Z' },
+          { role: "user", content: "Hello", timestamp: "2024-01-01T00:00:00Z" },
+          {
+            role: "bot",
+            content: "Hi there!",
+            timestamp: "2024-01-01T00:00:01Z",
+          },
         ];
         (fetch as jest.Mock).mockResolvedValue({
           ok: true,
           json: () => Promise.resolve(mockMessages),
         });
 
-        const result = await getSessionMessages('test-session-id');
+        const result = await getSessionMessages("test-session-id");
 
         expect(fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/api/c/test-session-id/messages'),
+          expect.stringContaining("/api/c/test-session-id/messages"),
           expect.objectContaining({
-            method: 'GET',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-          })
+            method: "GET",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+          }),
         );
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual({
-          role: 'user',
-          content: 'Hello',
-          timestamp: '2024-01-01T00:00:00Z',
+          role: "user",
+          content: "Hello",
+          timestamp: "2024-01-01T00:00:00Z",
         });
         expect(result[1]).toEqual({
-          role: 'assistant',
-          content: 'Hi there!',
-          timestamp: '2024-01-01T00:00:01Z',
+          role: "bot",
+          content: "Hi there!",
+          timestamp: "2024-01-01T00:00:01Z",
         });
       });
 
-      it('handles different role formats', async () => {
+      it("handles different role formats", async () => {
         const mockMessages = [
-          { role: 'User', content: 'Hello' },
-          { role: 'Bot', content: 'Hi' },
-          { role: 'assistant', content: 'Hey' },
-          { role: 'user', content: 'Hey back' },
+          { role: "User", content: "Hello" },
+          { role: "Bot", content: "Hi" },
+          { role: "bot", content: "Hey" },
+          { role: "user", content: "Hey back" },
         ];
         (fetch as jest.Mock).mockResolvedValue({
           ok: true,
           json: () => Promise.resolve(mockMessages),
         });
 
-        const result = await getSessionMessages('test-session');
+        const result = await getSessionMessages("test-session");
 
-        expect(result[0].role).toBe('user');
-        expect(result[1].role).toBe('assistant');
-        expect(result[2].role).toBe('assistant');
-        expect(result[3].role).toBe('user');
+        expect(result[0].role).toBe("user");
+        expect(result[1].role).toBe("bot");
+        expect(result[2].role).toBe("bot");
+        expect(result[3].role).toBe("user");
       });
 
-      it('handles array content in messages', async () => {
+      it("handles array content in messages", async () => {
         const mockMessages = [
           {
-            role: 'assistant',
+            role: "bot",
             content: [
-              { type: 'text', text: 'Part 1' },
-              { type: 'text', text: 'Part 2' },
+              { type: "text", text: "Part 1" },
+              { type: "text", text: "Part 2" },
             ],
           },
         ];
@@ -260,16 +266,16 @@ describe('convosNew', () => {
           json: () => Promise.resolve(mockMessages),
         });
 
-        const result = await getSessionMessages('test-session');
+        const result = await getSessionMessages("test-session");
 
-        expect(result[0].content).toBe('Part 1\nPart 2');
+        expect(result[0].content).toBe("Part 1\nPart 2");
       });
 
-      it('handles object content in messages', async () => {
+      it("handles object content in messages", async () => {
         const mockMessages = [
           {
-            role: 'assistant',
-            content: { text: 'Object content' },
+            role: "bot",
+            content: { text: "Object content" },
           },
         ];
         (fetch as jest.Mock).mockResolvedValue({
@@ -277,16 +283,16 @@ describe('convosNew', () => {
           json: () => Promise.resolve(mockMessages),
         });
 
-        const result = await getSessionMessages('test-session');
+        const result = await getSessionMessages("test-session");
 
-        expect(result[0].content).toBe('Object content');
+        expect(result[0].content).toBe("Object content");
       });
 
-      it('falls back to message field when content is missing', async () => {
+      it("falls back to message field when content is missing", async () => {
         const mockMessages = [
           {
-            role: 'user',
-            message: 'Fallback message',
+            role: "user",
+            message: "Fallback message",
           },
         ];
         (fetch as jest.Mock).mockResolvedValue({
@@ -294,37 +300,37 @@ describe('convosNew', () => {
           json: () => Promise.resolve(mockMessages),
         });
 
-        const result = await getSessionMessages('test-session');
+        const result = await getSessionMessages("test-session");
 
-        expect(result[0].content).toBe('Fallback message');
+        expect(result[0].content).toBe("Fallback message");
       });
 
-      it('handles API errors', async () => {
+      it("handles API errors", async () => {
         (fetch as jest.Mock).mockResolvedValue({
           ok: false,
           status: 404,
-          statusText: 'Not Found',
+          statusText: "Not Found",
         });
 
-        const result = await getSessionMessages('invalid-session');
+        const result = await getSessionMessages("invalid-session");
 
         expect(result).toEqual([]);
       });
 
-      it('handles network errors', async () => {
-        (fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+      it("handles network errors", async () => {
+        (fetch as jest.Mock).mockRejectedValue(new Error("Network error"));
 
-        const result = await getSessionMessages('test-session');
+        const result = await getSessionMessages("test-session");
 
         expect(result).toEqual([]);
       });
     });
 
-    describe('getConversations', () => {
-      it('retrieves conversations list successfully', async () => {
+    describe("getConversations", () => {
+      it("retrieves conversations list successfully", async () => {
         const mockConversations = [
-          { id: 'conv1', title: 'Chat 1', created_at: '2024-01-01T00:00:00Z' },
-          { id: 'conv2', created_at: '2024-01-02T00:00:00Z' }, // No title
+          { id: "conv1", title: "Chat 1", created_at: "2024-01-01T00:00:00Z" },
+          { id: "conv2", created_at: "2024-01-02T00:00:00Z" }, // No title
         ];
         (fetch as jest.Mock).mockResolvedValue({
           ok: true,
@@ -334,31 +340,31 @@ describe('convosNew', () => {
         const result = await getConversations();
 
         expect(fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/api/c/'),
+          expect.stringContaining("/api/c/"),
           expect.objectContaining({
-            method: 'GET',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-          })
+            method: "GET",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+          }),
         );
         expect(result).toHaveLength(2);
         expect(result[0]).toEqual({
-          id: 'conv1',
-          title: 'Chat 1',
-          created_at: new Date('2024-01-01T00:00:00Z'),
+          id: "conv1",
+          title: "Chat 1",
+          created_at: new Date("2024-01-01T00:00:00Z"),
         });
         expect(result[1]).toEqual({
-          id: 'conv2',
-          title: 'New Chat', // Fallback title
-          created_at: new Date('2024-01-02T00:00:00Z'),
+          id: "conv2",
+          title: "New Chat", // Fallback title
+          created_at: new Date("2024-01-02T00:00:00Z"),
         });
       });
 
-      it('handles API errors', async () => {
+      it("handles API errors", async () => {
         (fetch as jest.Mock).mockResolvedValue({
           ok: false,
           status: 500,
-          statusText: 'Internal Server Error',
+          statusText: "Internal Server Error",
         });
 
         const result = await getConversations();
@@ -366,8 +372,8 @@ describe('convosNew', () => {
         expect(result).toEqual([]);
       });
 
-      it('handles network errors', async () => {
-        (fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+      it("handles network errors", async () => {
+        (fetch as jest.Mock).mockRejectedValue(new Error("Network error"));
 
         const result = await getConversations();
 
@@ -376,53 +382,55 @@ describe('convosNew', () => {
     });
   });
 
-  describe('Endpoint Management', () => {
-    describe('getStoredEndpoint', () => {
-      it('retrieves endpoint from localStorage', () => {
-        localStorageMock.getItem.mockReturnValue('https://custom-endpoint.com');
+  describe("Endpoint Management", () => {
+    describe("getStoredEndpoint", () => {
+      it("retrieves endpoint from localStorage", () => {
+        localStorageMock.getItem.mockReturnValue("https://custom-endpoint.com");
         const result = getStoredEndpoint();
 
-        expect(result).toBe('https://custom-endpoint.com');
-        expect(localStorageMock.getItem).toHaveBeenCalledWith('chatdku_api_endpoint');
+        expect(result).toBe("https://custom-endpoint.com");
+        expect(localStorageMock.getItem).toHaveBeenCalledWith(
+          "chatdku_api_endpoint",
+        );
       });
 
-      it('returns default endpoint when none stored', () => {
+      it("returns default endpoint when none stored", () => {
         localStorageMock.getItem.mockReturnValue(null);
         const result = getStoredEndpoint();
 
-        expect(result).toBe('https://chatdku.dukekunshan.edu.cn/api/chat');
+        expect(result).toBe("https://chatdku.dukekunshan.edu.cn/api/chat");
       });
 
-      it('returns default endpoint in server environment', () => {
+      it("returns default endpoint in server environment", () => {
         const originalWindow = global.window;
         delete (global as any).window;
 
         const result = getStoredEndpoint();
 
-        expect(result).toBe('https://chatdku.dukekunshan.edu.cn/api/chat');
+        expect(result).toBe("https://chatdku.dukekunshan.edu.cn/api/chat");
 
         global.window = originalWindow;
       });
     });
 
-    describe('setStoredEndpoint', () => {
-      it('stores endpoint in localStorage', () => {
-        setStoredEndpoint('https://new-endpoint.com');
+    describe("setStoredEndpoint", () => {
+      it("stores endpoint in localStorage", () => {
+        setStoredEndpoint("https://new-endpoint.com");
 
         expect(localStorageMock.setItem).toHaveBeenCalledWith(
-          'chatdku_api_endpoint',
-          'https://new-endpoint.com'
+          "chatdku_api_endpoint",
+          "https://new-endpoint.com",
         );
       });
 
-      it('does nothing in server environment', () => {
+      it("does nothing in server environment", () => {
         const originalWindow = global.window;
         const originalLocalStorage = global.localStorage;
-        
+
         (global as any).window = undefined;
         (global as any).localStorage = undefined;
 
-        setStoredEndpoint('https://should-not-store.com');
+        setStoredEndpoint("https://should-not-store.com");
 
         expect(localStorageMock.setItem).not.toHaveBeenCalled();
 
@@ -431,17 +439,19 @@ describe('convosNew', () => {
       });
     });
 
-    describe('clearStoredEndpoint', () => {
-      it('removes endpoint from localStorage', () => {
+    describe("clearStoredEndpoint", () => {
+      it("removes endpoint from localStorage", () => {
         clearStoredEndpoint();
 
-        expect(localStorageMock.removeItem).toHaveBeenCalledWith('chatdku_api_endpoint');
+        expect(localStorageMock.removeItem).toHaveBeenCalledWith(
+          "chatdku_api_endpoint",
+        );
       });
 
-      it('does nothing in server environment', () => {
+      it("does nothing in server environment", () => {
         const originalWindow = global.window;
         const originalLocalStorage = global.localStorage;
-        
+
         (global as any).window = undefined;
         (global as any).localStorage = undefined;
 
@@ -455,31 +465,33 @@ describe('convosNew', () => {
     });
   });
 
-  describe('Cookie Utilities', () => {
-    it('handles special characters in session IDs', () => {
-      setCurrentSessionId('session+with=special&chars');
-      expect(document.cookie).toContain('chatdku_session_id=session%2Bwith%3Dspecial%26chars');
+  describe("Cookie Utilities", () => {
+    it("handles special characters in session IDs", () => {
+      setCurrentSessionId("session+with=special&chars");
+      expect(document.cookie).toContain(
+        "chatdku_session_id=session%2Bwith%3Dspecial%26chars",
+      );
     });
 
-    it('handles multiple cookies', () => {
-      document.cookie = 'other=value; path=/';
-      setCurrentSessionId('test-session');
-      expect(document.cookie).toContain('chatdku_session_id=test-session');
-      expect(document.cookie).toContain('other=value');
+    it("handles multiple cookies", () => {
+      document.cookie = "other=value; path=/";
+      setCurrentSessionId("test-session");
+      expect(document.cookie).toContain("chatdku_session_id=test-session");
+      expect(document.cookie).toContain("other=value");
     });
 
-    it('properly decodes URL-encoded cookies', () => {
-      document.cookie = 'chatdku_session_id=session%20with%20spaces';
+    it("properly decodes URL-encoded cookies", () => {
+      document.cookie = "chatdku_session_id=session%20with%20spaces";
       const result = getCurrentSessionId();
-      expect(result).toBe('session with spaces');
+      expect(result).toBe("session with spaces");
     });
   });
 
-  describe('Error Handling', () => {
-    it('handles malformed JSON responses', async () => {
+  describe("Error Handling", () => {
+    it("handles malformed JSON responses", async () => {
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
-        json: () => Promise.reject(new Error('Unexpected token in JSON')),
+        json: () => Promise.reject(new Error("Unexpected token in JSON")),
       });
 
       const result = await getNewSession();
@@ -487,7 +499,7 @@ describe('convosNew', () => {
       expect(result).toBeNull();
     });
 
-    it('handles missing session_id in response', async () => {
+    it("handles missing session_id in response", async () => {
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({}), // Empty response
@@ -498,9 +510,9 @@ describe('convosNew', () => {
       expect(result).toBeUndefined();
     });
 
-    it('handles invalid date strings in conversations', async () => {
+    it("handles invalid date strings in conversations", async () => {
       const mockConversations = [
-        { id: 'conv1', title: 'Chat 1', created_at: 'invalid-date' },
+        { id: "conv1", title: "Chat 1", created_at: "invalid-date" },
       ];
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,

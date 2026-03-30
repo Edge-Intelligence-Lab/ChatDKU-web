@@ -136,8 +136,7 @@ export async function getSessionMessages(
 
 		return data.map((msg: any) => {
 			const rawRole = (msg?.role ?? "").toString().toLowerCase();
-			const role =
-				rawRole === "bot" || rawRole === "assistant" ? "assistant" : "user";
+			const role = rawRole === "bot" ? "bot" : "user";
 
 			// Prefer `content` if present; fall back to backend's `message` field
 			let contentValue: any = (msg as any)?.content ?? (msg as any)?.message;
