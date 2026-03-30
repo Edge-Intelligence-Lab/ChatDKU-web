@@ -1,7 +1,7 @@
 const isDevMode = process.env.NODE_ENV === "development";
 const apiBaseUrl = isDevMode
 	? "http://localhost:3000"
-	: "https://chatdku.dukekunshan.edu.cn/public"; // Port is for the public-facing server.
+	: "https://api.chatdku.com"; // Port is for the public-facing server.
 
 export const API_ENDPOINTS = {
 	CHAT_DEFAULT: `${apiBaseUrl}/chat`,
