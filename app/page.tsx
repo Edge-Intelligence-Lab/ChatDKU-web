@@ -88,10 +88,10 @@ export default function IntroPage() {
 			<section className="relative overflow-hidden py-24 md:py-24 px-4">
 				<div className="flex flex-col lg:flex-row mx-auto items-center justify-around text-center">
 					<div className="md:min-w-lg">
-						<h1 className="text-4xl drop-shadow-white/10 drop-shadow-2xl sm:text-5xl md:text-6xl font-serif tracking-tight mb-10 leading-tight">
+						<h1 className="text-4xl font-serif drop-shadow-white/10 drop-shadow-2xl sm:text-5xl md:text-6xl tracking-tight mb-10 leading-tight">
 							University knowledge,
 							<br />
-							<span className=" bg-gradient-to-r  from-green-700 to-blue-600 dark:from-green-300 dark:to-blue-300 bg-clip-text text-transparent">
+							<span className=" bg-gradient-to-r  from-green-700 to-blue-600 dark:from-green-200 dark:to-blue-300 bg-clip-text text-transparent">
 								finally in one place.
 							</span>
 						</h1>

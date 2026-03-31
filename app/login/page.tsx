@@ -3,6 +3,8 @@ import { TermsButton } from "@/components/about";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import {
@@ -23,11 +25,13 @@ const cgaramond = Cormorant_Garamond({
 
 export default function LoginPage() {
 	const [termsAccepted, setTermsAccepted] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
 
 	const router = useRouter();
 
 	const handleProceed = async () => {
 		if (termsAccepted) {
+			setIsLoading(true);
 			// Set cookie for terms acceptance - expires in 60 days
 			Cookies.set("terms_accepted", "true", { expires: 60 });
 			// Fetch JWT so the Python chat API allows requests
@@ -38,6 +42,9 @@ export default function LoginPage() {
 				Cookies.set("chatdku_token", token, { expires: 1 });
 			} catch (e) {
 				console.error("JWT fetch failed:", e);
+				toast.error("Couldn't connect to server. Please try again later.");
+				setIsLoading(false);
+				return;
 			}
 			router.push("/app");
 		}
@@ -50,22 +57,22 @@ export default function LoginPage() {
 					src={"/ADBVC-2.jpg"}
 					alt="Photo of DKU campus."
 					fill
-					className="object-cover md:object-bottom rounded-4xl p-3 animate-in fade-in-30 duration-200 drop-shadow-md"
+					className="object-cover md:object-bottom md:rounded-4xl md:p-3 animate-in fade-in-30 duration-200 drop-shadow-md"
 					priority
 				/>
 			</div>
 			<div className="flex flex-col items-center md:absolute right-0 translate-y-[20vh] md:translate-y-0 top-0 md:top-0 md:w-1/2 md:h-full overflow-scroll space-y-4 justify-between">
 				<div className="w-full flex flex-row items-center justify-between p-3 sm:p-5">
-					<h1 className="text-3xl flex">
+					<h1 className="text-xl md:text-2xl lg:text-3xl flex items-center">
 						<Image
 							src="/logos/new_logo.svg"
 							alt="ChatDKU logo"
 							width={40}
 							height={40}
 						/>
-						<b className="ml-1.5">ChatDKU</b>
+						<b className="ml-1">ChatDKU</b>
 					</h1>
-					<div className="space-x-2">
+					<div className="sm:space-x-2">
 						<Link href={"/"}>
 							<Button variant="link">Home</Button>
 						</Link>
@@ -79,7 +86,7 @@ export default function LoginPage() {
 				</div>
 				<div className="mx-5 my-20 max-w-[500]">
 					<h1
-						className={`text-5xl font-lighter text-center font-serif drop-shadow-2xl drop-shadow-green-300/20 fade-slide-in ${cgaramond.variable}`}
+						className={`text-5xl font-lighter text-center font-serif tracking-tight drop-shadow-2xl drop-shadow-green-300/20 fade-slide-in ${cgaramond.variable}`}
 					>
 						Navigating university has never been easier.
 					</h1>
@@ -114,19 +121,23 @@ export default function LoginPage() {
 									<Button
 										variant="secondary"
 										className="rounded-full p-6 border border-foreground/10"
-										disabled={!termsAccepted}
+										disabled={!termsAccepted || isLoading}
 										onClick={handleProceed}
 									>
-										<p>
-											Proceed as <span className="font-bold">guest</span>
-										</p>
+										{isLoading ? (
+											<Loader2 className="animate-spin" />
+										) : (
+											<p>
+												Proceed as <span className="font-bold">guest</span>
+											</p>
+										)}
 									</Button>
-									<p className="opacity-80">or</p>
+									<p className="opacity-80 pb-2">or</p>
 									<Link href={"https://chatdku.dukekunshan.edu.cn/"}>
 										<Button
 											variant="default"
 											className="rounded-full p-6 -mt-2 bg-blue-700 text-white hover:bg-blue-500 border border-blue-300/30"
-											disabled={!termsAccepted}
+											disabled={!termsAccepted || isLoading}
 										>
 											<p>
 												Log in with{" "}
