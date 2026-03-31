@@ -23,115 +23,154 @@ import {
 	ArrowUpRight,
 } from "lucide-react";
 
+type Props = {
+	className?: string;
+};
+
+export function NavLinks({ className }: Props) {
+	return (
+		<div className={`flex items-center gap-1 sm:gap-2 ${className}`}>
+			<Link href="#stack">
+				<Button variant="link" size="sm">
+					Stack
+				</Button>
+			</Link>
+			<Link href="#agent">
+				<Button variant="link" size="sm">
+					Agent
+				</Button>
+			</Link>
+			<Link href="#seekbench">
+				<Button variant="link" size="sm">
+					SeekBench
+				</Button>
+			</Link>
+			<Link href="/about">
+				<Button variant="link" size="sm">
+					About
+				</Button>
+			</Link>
+			<Link href="/team-credits">
+				<Button variant="link" size="sm">
+					Team
+				</Button>
+			</Link>
+		</div>
+	);
+}
+
 export default function IntroPage() {
 	return (
 		<div className="min-h-screen bg-background text-foreground">
 			{/* ── Navbar ── */}
-			<nav className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
-				<div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+			<nav className="sticky top-0 z-50  bg-background/80 backdrop-blur-sm rounded-b-sm ">
+				<div className="md:px-20 px-5 mx-auto py-3 sm:py-5 flex items-center justify-between">
 					<div className="flex items-center gap-2">
 						<Image
 							src="/logos/new_logo.svg"
 							alt="ChatDKU"
-							width={32}
-							height={32}
+							width={40}
+							height={40}
 						/>
-						<span className="font-bold text-2xl">ChatDKU</span>
+						<span className="font-bold text-3xl">ChatDKU</span>
 					</div>
-					<div className="flex items-center gap-1 sm:gap-2">
-						<Link href="/about">
-							<Button
-								variant="ghost"
-								size="sm"
-								className="hidden sm:inline-flex"
-							>
-								About
-							</Button>
-						</Link>
-						<Link href="/team-credits">
-							<Button
-								variant="ghost"
-								size="sm"
-								className="hidden sm:inline-flex"
-							>
-								Team
-							</Button>
-						</Link>
+					<div>
+						<NavLinks className="hidden sm:inline-block pr-4" />
 						<Link href="/login">
-							<Button size="sm" className="rounded-full px-4">
-								Get Started
-							</Button>
+							<Button className="rounded-full px-4">Log In</Button>
 						</Link>
 					</div>
 				</div>
+				<NavLinks className="sm:hidden justify-evenly" />
 			</nav>
 
 			{/* ── Hero ── */}
-			<section className="relative overflow-hidden py-24 md:py-36 px-4">
-				<div className="absolute inset-0 -z-10 bg-gradient-to-br from-blue-50 via-background to-emerald-50/40 dark:from-blue-950/20 dark:via-background dark:to-emerald-950/10" />
-				{/* decorative blobs */}
-				<div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-blue-400/10 dark:bg-blue-400/5 blur-3xl -z-10" />
-				<div className="absolute -bottom-16 -left-16 w-72 h-72 rounded-full bg-emerald-400/10 dark:bg-emerald-400/5 blur-3xl -z-10" />
-
-				<div className="flex flex-col md:flex-row mx-auto items-center justify-around text-center">
-					<div>
-						<h1 className="text-4xl drop-shadow-white/10 drop-shadow-2xl sm:text-5xl md:text-6xl font-serif tracking-tight mb-5 leading-tight">
+			<section className="relative overflow-hidden py-24 md:py-24 px-4">
+				<div className="flex flex-col lg:flex-row mx-auto items-center justify-around text-center">
+					<div className="md:min-w-lg">
+						<h1 className="text-4xl drop-shadow-white/10 drop-shadow-2xl sm:text-5xl md:text-6xl font-serif tracking-tight mb-10 leading-tight">
 							University knowledge,
 							<br />
-							<span className=" bg-gradient-to-r  from-blue-500 to-lime-600 dark:from-blue-400 dark:to-lime-500 bg-clip-text text-transparent">
+							<span className=" bg-gradient-to-r  from-green-700 to-blue-600 dark:from-green-300 dark:to-blue-300 bg-clip-text text-transparent">
 								finally in one place.
 							</span>
 						</h1>
-					</div>
-					<div className="max-w-xl text-center">
-						<p className="text-lg md:text-xl max-w-2xl mx-auto mb-8 leading-relaxed">
-							ChatDKU is the agentic AI assistant that answers all your DKU
-							questions accurately, privately, and instantly.
+						<p className="text-lg md:text-xl max-w-xl mx-auto mb-8 leading-relaxed">
+							{/* <Image */}
+							{/* 	src="/logos/new_logo.svg" */}
+							{/* 	width={22} */}
+							{/* 	height={22} */}
+							{/* 	alt="Logo" */}
+							{/* 	className="inline pb-1" */}
+							{/* /> */}
+							<b className="underline underline-offset-3">ChatDKU</b> is the
+							agentic AI assistant that answers all your DKU questions
+							accurately, privately, and instantly.
 						</p>
 						<div className="flex flex-col sm:flex-row gap-3 justify-center">
 							<Link href="/login">
 								<Button
 									size="lg"
-									className="rounded-full text-lg px-8 w-full sm:w-auto sm:px-10 md:py-6"
+									className="rounded-full text-xl px-8 w-auto sm:px-10 py-6 shadow-lg shadow-green-400/20 hover:font-bold "
 								>
-									Try ChatDKU
+									Open ChatDKU
 								</Button>
 							</Link>
-							<a href="#how-it-works">
-								<Button
-									variant="outline"
-									size="lg"
-									className="rounded-full px-8 w-full sm:w-auto sm:px-10 md:py-6 text-lg"
-								>
-									How it works
-								</Button>
-							</a>
+							{/* <a href="#how-it-works"> */}
+							{/* 	<Button */}
+							{/* 		variant="outline" */}
+							{/* 		size="lg" */}
+							{/* 		className="rounded-full px-8 w-full sm:w-auto sm:px-10 md:py-6 text-lg" */}
+							{/* 	> */}
+							{/* 		How it works */}
+							{/* 	</Button> */}
+							{/* </a> */}
 						</div>
-						<p className="mt-8 mb-2">Brought to you by</p>
-						<div className="flex flex-col space-x-1 items-center">
-							<Link href="https://sites.duke.edu/edgeintelligence/">
-								<Image
-									src={"/logos/BL_Edge Intelligence Lab_04.png"}
-									alt="Logo for EIL."
-									height={30}
-									width={300}
-									className="dark:hidden border -p-2 hover:scale-105 border-transparent hover:border-border hover:shadow-black/5 shadow-transparent rounded-2xl shadow-lg transition-all"
-								/>
-								<Image
-									src={"/logos/BL_Edge Intelligence Lab_06.png"}
-									alt="Logo for EIL."
-									height={30}
-									width={300}
-									className="hidden dark:block border -p-2 hover:scale-105 border-transparent hover:border-border hover:shadow-black/5 shadow-transparent rounded-2xl shadow-lg transition-all"
-								/>
-							</Link>
+						<div className="mt-8 mb-2 flex text-lg pt-5 flex-col sm:flex-row items-center justify-center gap-y-0 text-muted-foreground">
+							Brought to you by
+							<div className="flex flex-col space-x-1 items-center">
+								<Link href="https://sites.duke.edu/edgeintelligence/">
+									<Image
+										src={"/logos/BL_Edge Intelligence Lab_04.png"}
+										alt="Logo for EIL."
+										height={30}
+										width={230}
+										className="dark:hidden border -p-2 border-transparent hover:border-border hover:shadow-black/5 shadow-transparent rounded-2xl shadow-lg transition-all"
+									/>
+									<Image
+										src={"/logos/BL_Edge Intelligence Lab_06.png"}
+										alt="Logo for EIL."
+										height={30}
+										width={230}
+										className="hidden dark:block border -p-2 border-transparent hover:border-border hover:shadow-black/5 shadow-transparent rounded-2xl shadow-lg transition-all"
+									/>
+								</Link>
+							</div>
 						</div>
+					</div>
+					<div className="lg:max-w-2/5 text-right md:pl-6 mt-6 scale-105 md:scale-100">
+						<video
+							autoPlay
+							muted
+							loop
+							playsInline
+							preload="auto"
+							className="w-full h-auto rounded-sm "
+						>
+							<source src="/promo.webm" type="video/webm" />
+							Your browser does not support the video tag.
+						</video>
+						<Link href="https://youtube.com">
+							<Button variant="link" className="m-2 text-muted-foreground">
+								Watch on YouTube <ArrowUpRight />
+							</Button>
+						</Link>
 					</div>
 				</div>
 			</section>
 
 			{/* ── The Problem ── */}
-			<section className="py-16 px-4 bg-muted/30">
+			<section className="py-16 px-4 bg-from-muted/30 bg-gradient-to-b to-lime-500/5">
 				<div className="max-w-5xl mx-auto">
 					<div className="text-center mb-10">
 						<h2 className="text-2xl md:text-3xl font-bold mb-2">
@@ -168,12 +207,14 @@ export default function IntroPage() {
 							</div>
 						))}{" "}
 					</div>{" "}
-					<p className="text-center text-lg mt-6">We've all been here.</p>
+					<p className="text-center italic text-lg mt-6">
+						We've all been there.
+					</p>
 				</div>
 			</section>
 
 			{/* ── The Solution ── */}
-			<section className="py-16 px-4">
+			<section className="py-16 px-4" id="agent">
 				<div className="max-w-5xl mx-auto">
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
 						<div>
@@ -228,15 +269,17 @@ export default function IntroPage() {
 									ChatDKU
 								</p>
 								<p className="leading-relaxed">
-									You can declare your major during the Spring term of your
-									sophomore year at Duke Kunshan University (DKU).
+									You can declare your major during the{" "}
+									<b>Spring term of your sophomore year</b> at Duke Kunshan
+									University.
 									<br />
 									Prior to declaring, you should work with your academic advisor
 									to develop a long-range academic plan that aligns with your
-									intended major. It is recommended to explore different major
-									options during your first year to make an informed decision.
-									For more information, consult the Office of Undergraduate
-									Advising or review the DKU Undergraduate Bulletin.
+									intended major.
+									<br /> It is recommended to explore different major options
+									during your first year to make an informed decision. For more
+									information, consult the Office of Undergraduate Advising or
+									review the DKU Undergraduate Bulletin.
 									<br />
 									<span className="text-xs text-muted-foreground">
 										Reference: <br />• DKU Undergraduate Studies Bulletin (Page
@@ -250,7 +293,7 @@ export default function IntroPage() {
 			</section>
 
 			{/* ── Architecture ── */}
-			<section id="how-it-works" className="py-16 px-4 bg-muted/30">
+			<section id="stack" className="py-16 px-4 bg-muted/30">
 				<div className="max-w-5xl mx-auto">
 					<div className="text-center mb-12">
 						<Badge variant="outline" className="mb-4">
@@ -327,7 +370,7 @@ export default function IntroPage() {
 			</section>
 
 			{/* ── Agent Flow ── */}
-			<section className="py-16 px-4">
+			<section className="py-16 px-4 bg-gradient-to-b from-transparent to-blue-500/10">
 				<div className="max-w-5xl mx-auto">
 					<div className="text-center mb-12">
 						<Badge variant="outline" className="mb-4">
@@ -400,7 +443,7 @@ export default function IntroPage() {
 						))}
 					</div>
 
-					<div className="mt-10 max-w-2xl mx-auto bg-muted/40 rounded-2xl p-5 border text-sm text-center text-muted-foreground leading-relaxed">
+					<div className="mt-10 max-w-2xl mx-auto bg-muted/50 rounded-2xl p-5 border text-sm text-center text-muted-foreground leading-relaxed">
 						If the retrieved context isn&apos;t strong enough, the system
 						rewrites the query and retrieves again before generating.{" "}
 						<strong className="text-foreground">
@@ -414,10 +457,13 @@ export default function IntroPage() {
 			</section>
 
 			{/* ── SeekBench ── */}
-			<section className="py-16 px-4 bg-muted/30">
+			<section id="seekbench" className="py-16 px-4 bg-muted/30">
 				<div className="max-w-5xl mx-auto">
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
 						<div className="space-y-4">
+							<Badge variant="outline" className="mb-4">
+								Evaluation
+							</Badge>
 							<div className="rounded-2xl bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 flex items-center justify-center px-2 py-4">
 								<BarChart3 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />{" "}
 								<h3 className="text-2xl mx-1">SeekBench</h3>
@@ -475,7 +521,7 @@ export default function IntroPage() {
 			</section>
 
 			{/* ── Roadmap ── */}
-			<section className="py-16 px-4">
+			<section className="py-16 px-4 bg-gradient-to-b from-transparent to-emerald-500/10">
 				<div className="max-w-5xl mx-auto">
 					<div className="text-center mb-10">
 						<Badge variant="outline" className="mb-4">
@@ -513,7 +559,7 @@ export default function IntroPage() {
 						].map(({ icon: Icon, title, desc }) => (
 							<div
 								key={title}
-								className="bg-muted/40 rounded-2xl p-5 border hover:shadow-md hover:bg-muted/60 transition-all duration-200"
+								className=" bg-muted/50 rounded-2xl p-5 border hover:shadow-md hover:bg-muted/80 transition-all duration-200"
 							>
 								<Icon className="h-6 w-6 mb-3 text-muted-foreground" />
 								<h3 className="font-semibold mb-1 text-sm">{title}</h3>

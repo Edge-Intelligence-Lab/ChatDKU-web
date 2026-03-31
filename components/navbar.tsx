@@ -18,33 +18,22 @@ import {
 import DynamicLogo from "@/components/dynamic-logo";
 import { Badge } from "@/components/ui/badge";
 import { ModeToggle } from "./ui/mode-toggle";
-import { Button } from "./ui/button";
 import Link from "next/link";
 
 export function Navbar() {
   const pathname = usePathname();
   const isDevRoute = pathname === "/dev" || pathname === "/dev/";
-  const isAboutRoute = pathname === "/about" || pathname === "/about/";
 
   return (
     <NavigationMenu className="w-full max-w-[98vw] mx-auto flex justify-between items-center border-b lg:border-none fixed top-0 left-1/2 -translate-x-1/2 z-10 backdrop-blur-md lg:backdrop-blur-none bg-gradient-to-b from-background to-transparent">
       <div className="flex flex-row items-center ">
-        <div className="flex flex-row items-center p-3 pr-0 space-x-2">
+        <Link
+          href={"/"}
+          className="flex flex-row items-center p-3 pr-0 space-x-2"
+        >
           <div className="w-5" />
-          <Button
-            variant={"ghost"}
-            className={
-              isAboutRoute
-                ? "w-10 h-10 flex items-center justify-center fixed top-2 left-0 px-2 rounded-xl border-transparent hover:border-1 hover:border-foreground/10"
-                : "hidden"
-            }
-          >
-            <Link href="/">
-              <Home />
-            </Link>
-          </Button>
           <DynamicLogo width={35} height={35} />
-          <h2 className="flex flex-row gap-1 items-center font-inter text-xl md:text-xl font-bold">
+          <h2 className="flex flex-row -ml-1 gap-1 items-center font-inter text-xl md:text-xl font-bold">
             ChatDKU
             {isDevRoute && (
               // <span className="font-inter text-xs md:text-sm lg:text-sm italic text-primary/20">dev</span>
@@ -52,10 +41,10 @@ export function Navbar() {
             )}
             {!isDevRoute && (
               // <span className="font-inter text-xs md:text-sm lg:text-sm italic text-primary/20">dev</span>
-              <Badge variant="default">Public</Badge>
+              <Badge variant="default">Preview</Badge>
             )}
           </h2>
-        </div>
+        </Link>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>

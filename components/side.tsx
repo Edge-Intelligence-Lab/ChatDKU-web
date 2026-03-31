@@ -85,7 +85,6 @@ export default function Side({
 	const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 	const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-
 	// Keep filtered list in sync with base conversations when no search
 	useEffect(() => {
 		if (!searchQuery.trim()) {
@@ -176,9 +175,11 @@ export default function Side({
 					</SheetTrigger>
 					<SheetContent side="left">
 						<SheetHeader>
-							<SheetTitle className="flex items-center gap-x-1">
-								<DynamicLogo width={35} height={35} />
-								ChatDKU
+							<SheetTitle>
+								<Link href={"/"} className="flex items-center gap-x-1">
+									<DynamicLogo width={35} height={35} />
+									ChatDKU
+								</Link>
 							</SheetTitle>
 						</SheetHeader>
 
@@ -193,20 +194,14 @@ export default function Side({
 							</Button>
 
 							<Link href="/about">
-								<Button
-									variant="inChatbox"
-									className="w-full justify-start"
-									>
+								<Button variant="inChatbox" className="w-full justify-start">
 									<MessageCircleQuestion />
 									About ChatDKU
 								</Button>
 							</Link>
-							
+
 							<Link href="https://chatdku.dukekunshan.edu.cn/">
-								<Button
-									variant="inChatbox"
-									className="w-full justify-start"
-									>
+								<Button variant="inChatbox" className="w-full justify-start">
 									<LogIn />
 									Login with Duke NetID
 								</Button>
@@ -218,68 +213,74 @@ export default function Side({
 								</p>
 								<ComboBoxResponsive
 									inputValue={currentEndpoint || ""}
-									onEndpointChange={onEndpointChange ?? (() => {})}
+									onEndpointChange={onEndpointChange ?? (() => { })}
 								/>
 							</div>
 							<TooltipProvider>
-							<Tooltip>
-								<TooltipContent>
-									History not saved for guest users.
-								</TooltipContent>
-							<TooltipTrigger className="text-left opacity-50 cursor-not-allowed">
-								<div>
-							<p className="ml-2 mt-4 text-sm text-muted-foreground">
-								Chat History
-							</p>
-							<div className="pb-2">
-								<Input
-									placeholder="Search chats"
-									value={searchQuery}
-									onChange={(e) => setSearchQuery(e.target.value)}
-									/>
-							</div>
-							<ScrollArea className="flex-1 min-h-0 pointer-events-none">
-								<div className="space-y-1 pb-4">
-									{(searchQuery.trim() ? filteredConversations : conversations)
-										.length > 0 ? (
-										(searchQuery.trim()
-											? filteredConversations
-											: conversations
-										).map((conversation) => (
-											<div
-												key={conversation.id}
-												className={cn(
-													"group w-[97%] flex items-center justify-between p-2 pl-3 rounded-md hover:bg-sidebar-accent",
-													false &&
-														"bg-sidebar-accent",
-												)}
-											>
-												<div
-													className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
-													onClick={() => onConversationSelect(conversation.id)}
-												>
-													<MessageCircle className="h-4 w-4 shrink-0" />
-													<div className="flex-1 min-w-0">
-														<Tooltip delayDuration={600}>
-															<TooltipTrigger asChild>
-																<div className="text-sm font-medium overflow-hidden text-ellipsis whitespace-nowrap max-w-[230px]">
-																	{conversation.title}
+								<Tooltip>
+									<TooltipContent>
+										History not saved for guest users.
+									</TooltipContent>
+									<TooltipTrigger className="text-left opacity-50 cursor-not-allowed">
+										<div>
+											<p className="ml-2 mt-4 text-sm text-muted-foreground">
+												Chat History
+											</p>
+											<div className="pb-2">
+												<Input
+													placeholder="Search chats"
+													value={searchQuery}
+													onChange={(e) => setSearchQuery(e.target.value)}
+												/>
+											</div>
+											<ScrollArea className="flex-1 min-h-0 pointer-events-none">
+												<div className="space-y-1 pb-4">
+													{(searchQuery.trim()
+														? filteredConversations
+														: conversations
+													).length > 0 ? (
+														(searchQuery.trim()
+															? filteredConversations
+															: conversations
+														).map((conversation) => (
+															<div
+																key={conversation.id}
+																className={cn(
+																	"group w-[97%] flex items-center justify-between p-2 pl-3 rounded-md hover:bg-sidebar-accent",
+																	false && "bg-sidebar-accent",
+																)}
+															>
+																<div
+																	className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+																	onClick={() =>
+																		onConversationSelect(conversation.id)
+																	}
+																>
+																	<MessageCircle className="h-4 w-4 shrink-0" />
+																	<div className="flex-1 min-w-0">
+																		<Tooltip delayDuration={600}>
+																			<TooltipTrigger asChild>
+																				<div className="text-sm font-medium overflow-hidden text-ellipsis whitespace-nowrap max-w-[230px]">
+																					{conversation.title}
+																				</div>
+																			</TooltipTrigger>
+
+																			<TooltipContent
+																				side="bottom"
+																				align="start"
+																			>
+																				<p className="max-w-xs break-words">
+																					{conversation.title}
+																				</p>
+																			</TooltipContent>
+																		</Tooltip>
+																		<div className="text-xs text-sidebar-foreground/60">
+																			{conversation.created_at.toLocaleDateString()}
+																		</div>
+																	</div>
 																</div>
-															</TooltipTrigger>
 
-															<TooltipContent side="bottom" align="start">
-																<p className="max-w-xs break-words">
-																	{conversation.title}
-																</p>
-															</TooltipContent>
-														</Tooltip>
-														<div className="text-xs text-sidebar-foreground/60">
-															{conversation.created_at.toLocaleDateString()}
-														</div>
-													</div>
-												</div>
-
-												{/* <DropdownMenu
+																{/* <DropdownMenu
 													onOpenChange={(open) =>
 														setActiveMenuId(open ? conversation.id : null)
 													}
@@ -310,20 +311,20 @@ export default function Side({
 														</DropdownMenuItem>
 													</DropdownMenuContent> 
 												</DropdownMenu> */}
-											</div>
-										))
-									) : (
-										<div className="text-sm text-sidebar-foreground/60 text-center py-4">
-											{searchQuery.trim()
-												? "No matches"
-												: "No conversations yet"}
+															</div>
+														))
+													) : (
+														<div className="text-sm text-sidebar-foreground/60 text-center py-4">
+															{searchQuery.trim()
+																? "No matches"
+																: "No conversations yet"}
+														</div>
+													)}
+												</div>
+											</ScrollArea>
 										</div>
-									)}
-								</div>
-							</ScrollArea>
-							</div>
-							</TooltipTrigger>
-							</Tooltip>
+									</TooltipTrigger>
+								</Tooltip>
 							</TooltipProvider>
 						</div>
 					</SheetContent>

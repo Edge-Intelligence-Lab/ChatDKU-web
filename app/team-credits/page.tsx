@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/backButton";
+import Link from "next/link";
 
 type MemberProps = {
   name: string;
@@ -12,6 +13,7 @@ type MemberProps = {
   role: string;
   avatar?: string;
   showContribution?: boolean;
+  link?: string;
 };
 
 function MajorMember({
@@ -19,6 +21,7 @@ function MajorMember({
   classYear,
   team,
   role,
+  link,
   avatar = "/avatars/default.jpg",
   showContribution = true,
 }: MemberProps) {
@@ -29,19 +32,23 @@ function MajorMember({
       className={`flex items-start gap-4 p-4 border rounded-xl w-full max-w-5xl mx-auto`}
     >
       {/* Avatar */}
-      <Image
-        src={avatar}
-        alt={name}
-        width={64}
-        height={64}
-        className="rounded-full object-cover"
-      />
+      <Link href={link || ""}>
+        <Image
+          src={avatar}
+          alt={name}
+          width={64}
+          height={64}
+          className="rounded-full object-cover"
+        />
+      </Link>
 
       {/* Info */}
       <div className="flex-1">
-        <p className="font-semibold">
-          {name} · {classYear}
-        </p>
+        <Link href={link || ""}>
+          <p className="font-semibold">
+            {name} · {classYear}
+          </p>
+        </Link>
         <p className="text-sm text-muted-foreground">{team}</p>
 
         {/* Contribution */}
@@ -130,6 +137,7 @@ export default function TeamCreditsPage() {
             team="Project Advisor"
             avatar="/avatars/Bing.jpg"
             role=""
+            link="https://luobing1008.github.io/"
             showContribution={false}
           />
 
@@ -145,6 +153,7 @@ export default function TeamCreditsPage() {
           <MajorMember
             name="Anar Nyambayar"
             classYear="Class of 2027"
+            link="https://www.anar-n.com"
             team="Co-developer · Frontend Team Captian / Databases Team member / Agent Team Member"
             avatar="/avatars/Anar.jpg"
             role={`- Lead engineer for the Next.JS web frontend, responsible for interface design and continuous integration.

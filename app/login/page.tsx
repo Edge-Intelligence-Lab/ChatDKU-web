@@ -19,7 +19,7 @@ const cgaramond = Cormorant_Garamond({
 	variable: "--font-garamond",
 	display: "swap",
 	subsets: ["latin"],
-})
+});
 
 export default function LoginPage() {
 	const [termsAccepted, setTermsAccepted] = useState(false);
@@ -46,32 +46,43 @@ export default function LoginPage() {
 	return (
 		<div className="relative w-screen h-screen">
 			<div className="absolute left-0 top-0 w-full md:w-1/2 h-[20vh] md:h-full overflow-hidden ">
-			<Image
-				src={"/ADBVC-2.jpg"}
-				alt="Photo of DKU campus."
-				fill
-				className="object-cover md:object-bottom rounded-4xl p-3 animate-in fade-in-30 duration-200 drop-shadow-md"
-				priority
-			/>
+				<Image
+					src={"/ADBVC-2.jpg"}
+					alt="Photo of DKU campus."
+					fill
+					className="object-cover md:object-bottom rounded-4xl p-3 animate-in fade-in-30 duration-200 drop-shadow-md"
+					priority
+				/>
 			</div>
 			<div className="flex flex-col items-center md:absolute right-0 translate-y-[20vh] md:translate-y-0 top-0 md:top-0 md:w-1/2 md:h-full overflow-scroll space-y-4 justify-between">
 				<div className="w-full flex flex-row items-center justify-between p-3 sm:p-5">
 					<h1 className="text-3xl flex">
-					<Image
-						src="/logos/new_logo.svg"
-						alt="ChatDKU logo"
-						width={40}
-						height={40}
-					/>
-					<b className="ml-1.5">ChatDKU</b>
+						<Image
+							src="/logos/new_logo.svg"
+							alt="ChatDKU logo"
+							width={40}
+							height={40}
+						/>
+						<b className="ml-1.5">ChatDKU</b>
 					</h1>
 					<div className="space-x-2">
-					<Link href={"/about"}><Button variant="link">About</Button></Link>
-					<Link href={"/team-credits"}><Button variant="link">Team</Button></Link>
+						<Link href={"/"}>
+							<Button variant="link">Home</Button>
+						</Link>
+						<Link href={"/about"}>
+							<Button variant="link">About</Button>
+						</Link>
+						<Link href={"/team-credits"}>
+							<Button variant="link">Team</Button>
+						</Link>
 					</div>
 				</div>
 				<div className="mx-5 my-20 max-w-[500]">
-					<h1 className={`text-5xl font-lighter text-center font-serif drop-shadow-2xl drop-shadow-green-300/20 fade-slide-in ${cgaramond.variable}`}>Navigating university has never been easier.</h1>
+					<h1
+						className={`text-5xl font-lighter text-center font-serif drop-shadow-2xl drop-shadow-green-300/20 fade-slide-in ${cgaramond.variable}`}
+					>
+						Navigating university has never been easier.
+					</h1>
 				</div>
 				<div className="flex flex-col items-center space-y-4 outline p-10 rounded-3xl shadow">
 					<TermsButton />
@@ -93,9 +104,9 @@ export default function LoginPage() {
 					<p className="text-xs text-muted-foreground">
 						We save a cookie to remember your preferences.
 					</p>
-					</div>
+				</div>
 
-					<div>
+				<div>
 					<TooltipProvider>
 						<Tooltip>
 							<TooltipTrigger asChild>
@@ -112,15 +123,16 @@ export default function LoginPage() {
 									</Button>
 									<p className="opacity-80">or</p>
 									<Link href={"https://chatdku.dukekunshan.edu.cn/"}>
-									<Button
-										variant="default"
-										className="rounded-full p-6 -mt-2 bg-blue-700 text-white hover:bg-blue-500 border border-blue-300/30"
-										disabled={!termsAccepted}
-									>
-										<p>
-											Log in with <span className="font-bold">Duke NetID</span>
-										</p>
-									</Button>
+										<Button
+											variant="default"
+											className="rounded-full p-6 -mt-2 bg-blue-700 text-white hover:bg-blue-500 border border-blue-300/30"
+											disabled={!termsAccepted}
+										>
+											<p>
+												Log in with{" "}
+												<span className="font-bold">Duke NetID</span>
+											</p>
+										</Button>
 									</Link>
 								</div>
 							</TooltipTrigger>
@@ -132,7 +144,9 @@ export default function LoginPage() {
 						</Tooltip>
 					</TooltipProvider>
 				</div>
-				<div className="p-2 text-xs opacity-50 mt-10 w-full text-end">2026 Edge Intelligence Lab</div>
+				<div className="p-2 text-xs opacity-50 mt-10 w-full text-end">
+					2026 Edge Intelligence Lab
+				</div>
 			</div>
 		</div>
 	);
