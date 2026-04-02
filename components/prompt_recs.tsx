@@ -22,7 +22,8 @@ export function PromptRecs({ onPromptSelect, onSubmit }: PromptRecsProps) {
 
 	useEffect(() => {
 		const prompts = language === "zh" ? promptsZh : promptsEn;
-		setSelected(pickRandomPrompts(prompts, 5));
+		const count = window.matchMedia("(max-width: 640px)").matches ? 3 : 5;
+		setSelected(pickRandomPrompts(prompts, count));
 	}, [language]);
 
 	const handlePromptClick = (promptText: string) => {
