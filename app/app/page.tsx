@@ -339,9 +339,14 @@ export default function App() {
 					setShowStarter(true);
 					setIsChatboxCentered(true);
 					setChatHistory([]);
+					setInputValue("");
 					const chatLog = document.getElementById("chat-log");
 					if (chatLog) {
 						chatLog.innerHTML = "";
+					}
+					const aiInput = document.getElementById("ai-input") as HTMLTextAreaElement;
+					if (aiInput) {
+						aiInput.value = "";
 					}
 				}}
 				onConversationSelect={() => {}}
