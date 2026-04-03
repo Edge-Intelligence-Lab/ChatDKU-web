@@ -20,10 +20,34 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
 	title: "ChatDKU",
-	description: "AI Chat Interface",
+	description: "Your AI assistant for Duke Kunshan University.",
+	metadataBase: new URL("https://chatdku.com"),
 	icons: {
 		icon: "/favicon-small.png",
 		apple: "/favicon-small.png",
+	},
+	openGraph: {
+		title: "ChatDKU",
+		description: "Your AI assistant for Duke Kunshan University.",
+		url: "https://chatdku.com",
+		siteName: "ChatDKU",
+		images: [
+			{
+				url: "/og.png",
+				width: 1200,
+				height: 630,
+				alt: "ChatDKU",
+			},
+		],
+		locale: "en_US",
+		alternateLocale: ["zh_CN"],
+		type: "website",
+	},
+	twitter: {
+		card: "summary_large_image",
+		title: "ChatDKU",
+		description: "The agentic AI assistant for Duke Kunshan University.",
+		images: ["/og.png"],
 	},
 };
 
@@ -40,7 +64,7 @@ export default function RootLayout({
 					attribute="class"
 					defaultTheme="system"
 					enableSystem
-				// disableTransitionOnChange
+					// disableTransitionOnChange
 				>
 					<LanguageProvider>
 						{children}
