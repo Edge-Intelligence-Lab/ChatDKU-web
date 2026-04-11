@@ -229,7 +229,7 @@ export default function App() {
 		configureMarked();
 		const termsAccepted = Cookies.get("terms_accepted");
 		const token = Cookies.get("chatdku_token");
-		if (!termsAccepted || !(token || process.env.NODE_ENV === "development")) {
+		if (!termsAccepted || (!token && process.env.NODE_ENV != "development")) {
 			router.push("/login");
 		}
 	}, [router]);

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,66 @@ function NavLinks({ className }: Props) {
 
 export default function IntroPage() {
 	const { t } = useLanguage();
+	const iframeRef = useRef<HTMLIFrameElement>(null);
+
+	useEffect(() => {
+		const iframe = iframeRef.current;
+		if (!iframe) return;
+
+		const existing = document.querySelector(
+			'script[src="https://www.youtube.com/iframe_api"]',
+		);
+		if (!existing) {
+			const tag = document.createElement("script");
+			tag.src = "https://www.youtube.com/iframe_api";
+			document.body.appendChild(tag);
+		}
+
+		let player: any;
+		let interval: ReturnType<typeof setInterval> | null = null;
+		const END_SECONDS = 112;
+
+		const createPlayer = () => {
+			const YT = (window as any).YT;
+			if (!YT || !YT.Player || !iframeRef.current) return;
+			player = new YT.Player(iframeRef.current, {
+				events: {
+					onReady: (e: any) => {
+						e.target.mute();
+						e.target.playVideo();
+					},
+					onStateChange: (e: any) => {
+						if (e.data === YT.PlayerState.ENDED) {
+							e.target.seekTo(0, true);
+							e.target.playVideo();
+						}
+					},
+				},
+			});
+			interval = setInterval(() => {
+				if (!player || typeof player.getCurrentTime !== "function") return;
+				if (player.getCurrentTime() >= END_SECONDS) {
+					player.seekTo(0, true);
+					player.playVideo();
+				}
+			}, 250);
+		};
+
+		if ((window as any).YT && (window as any).YT.Player) {
+			createPlayer();
+		} else {
+			const prev = (window as any).onYouTubeIframeAPIReady;
+			(window as any).onYouTubeIframeAPIReady = () => {
+				if (typeof prev === "function") prev();
+				createPlayer();
+			};
+		}
+
+		return () => {
+			if (interval) clearInterval(interval);
+			if (player && typeof player.destroy === "function") player.destroy();
+		};
+	}, []);
 
 	return (
 		<div className="min-h-screen bg-background text-foreground">
@@ -142,17 +203,16 @@ export default function IntroPage() {
 						</div>
 					</div>
 					<div className="lg:max-w-2/5 text-right md:pl-6 mt-6 scale-105 md:scale-100">
-						<video
-							autoPlay
-							muted
-							loop
-							playsInline
-							preload="auto"
-							className="w-full h-auto rounded-sm "
-						>
-							<source src="/promo.webm" type="video/webm" />
-							{t("home.hero.videoFallback")}
-						</video>
+						<iframe
+							ref={iframeRef}
+							src="https://www.youtube.com/embed/SdItulvqdLo?enablejsapi=1&autoplay=1&mute=1&controls=1&playsinline=1&modestbranding=1&rel=0&end=112"
+							title="Introducing ChatDKU: Your AI Assistant at Duke Kunshan University"
+							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+							referrerPolicy="strict-origin-when-cross-origin"
+							allowFullScreen
+							style={{ aspectRatio: "16 / 9" }}
+							className="w-full h-auto rounded-sm border-0"
+						/>
 						<Link href="https://youtu.be/SdItulvqdLo">
 							<Button variant="link" className="m-2 text-muted-foreground">
 								{t("home.hero.watchYouTube")} <ArrowUpRight />

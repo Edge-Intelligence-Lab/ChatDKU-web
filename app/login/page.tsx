@@ -28,6 +28,7 @@ const cgaramond = Cormorant_Garamond({
 export default function LoginPage() {
 	const [termsAccepted, setTermsAccepted] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isDukeLoading, setIsDukeLoading] = useState(false);
 	const { t } = useLanguage();
 
 	const router = useRouter();
@@ -35,6 +36,7 @@ export default function LoginPage() {
 	useEffect(() => {
 		if (
 			Cookies.get("chatdku_token") &&
+			Cookies.get("terms_accepted") &&
 			!(process.env.NODE_ENV === "development")
 		) {
 			router.replace("/app");
@@ -57,7 +59,7 @@ export default function LoginPage() {
 					if (payload.exp) {
 						expires = new Date(payload.exp * 1000);
 					}
-				} catch { }
+				} catch {}
 				Cookies.set("chatdku_token", token, { expires });
 			} catch (e) {
 				console.error("JWT fetch failed:", e);
@@ -139,12 +141,12 @@ export default function LoginPage() {
 					<TooltipProvider>
 						<Tooltip>
 							<TooltipTrigger asChild>
-								<div className="flex flex-col sm:flex-row items-center space-x-2 space-y-2 mt-4">
+								<div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mt-4 justify-center">
 									<Button
 										variant="secondary"
 										className={
 											// "rounded-full p-6 border border-foreground/10 " +
-											"rounded-full p-6 -mt-2 bg-blue-700 text-white hover:bg-blue-500 border border-blue-300/30 disabled:bg-transparent disabled:text-foreground" // This is only for Chancellor's Office demo
+											"rounded-full p-6 bg-green-700 text-white hover:bg-green-500 border border-green-300/30 disabled:bg-transparent disabled:text-foreground disabled:border-border" // This is only for Chancellor's Office demo
 										}
 										disabled={!termsAccepted || isLoading}
 										onClick={handleProceed}
@@ -160,19 +162,28 @@ export default function LoginPage() {
 											</p>
 										)}
 									</Button>
-									{/* <p className="opacity-80 pb-2">{t("login.or")}</p> */}
-									{/* <Link href={"https://chatdku.dukekunshan.edu.cn/"}> */}
-									{/* 	<Button */}
-									{/* 		variant="default" */}
-									{/* 		className="rounded-full p-6 -mt-2 bg-blue-700 text-white hover:bg-blue-500 border border-blue-300/30" */}
-									{/* 		disabled={!termsAccepted || isLoading} */}
-									{/* 	> */}
-									{/* 		<p> */}
-									{/* 			{t("login.netid")}{" "} */}
-									{/* 			<span className="font-bold">{t("login.netidBold")}</span> */}
-									{/* 		</p> */}
-									{/* 	</Button> */}
-									{/* </Link> */}
+									<p className="opacity-80">{t("login.or")}</p>
+									<Button
+										variant="default"
+										className="rounded-full p-6 bg-blue-700 text-white hover:bg-blue-500 border border-blue-300/30 disabled:bg-transparent disabled:text-foreground disabled:border-border"
+										disabled={!termsAccepted || isLoading || isDukeLoading}
+										onClick={() => {
+											setIsDukeLoading(true);
+											window.location.href =
+												"https://chatdku.dukekunshan.edu.cn/";
+										}}
+									>
+										{isDukeLoading ? (
+											<Loader2 className="animate-spin" />
+										) : (
+											<p>
+												{t("login.netid")}{" "}
+												<span className="font-bold">
+													{t("login.netidBold")}
+												</span>
+											</p>
+										)}
+									</Button>
 								</div>
 							</TooltipTrigger>
 							{!termsAccepted && (
