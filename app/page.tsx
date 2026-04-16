@@ -203,16 +203,27 @@ export default function IntroPage() {
 						</div>
 					</div>
 					<div className="lg:max-w-2/5 text-right md:pl-6 mt-6 scale-105 md:scale-100">
-						<iframe
-							ref={iframeRef}
-							src="https://www.youtube.com/embed/SdItulvqdLo?enablejsapi=1&autoplay=1&mute=1&controls=1&playsinline=1&modestbranding=1&rel=0&end=112"
-							title="Introducing ChatDKU: Your AI Assistant at Duke Kunshan University"
-							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-							referrerPolicy="strict-origin-when-cross-origin"
-							allowFullScreen
-							style={{ aspectRatio: "16 / 9" }}
-							className="w-full h-auto rounded-sm border-0"
-						/>
+						{/* <iframe */}
+						{/* 	ref={iframeRef} */}
+						{/* 	src="https://www.youtube.com/embed/SdItulvqdLo?enablejsapi=1&autoplay=1&mute=1&controls=1&playsinline=1&modestbranding=1&rel=0&end=112" */}
+						{/* 	title="Introducing ChatDKU: Your AI Assistant at Duke Kunshan University" */}
+						{/* 	allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" */}
+						{/* 	referrerPolicy="strict-origin-when-cross-origin" */}
+						{/* 	allowFullScreen */}
+						{/* 	style={{ aspectRatio: "16 / 9" }} */}
+						{/* 	className="w-full h-auto rounded-sm border-0" */}
+						{/* /> */}
+						<video
+							autoPlay
+							muted
+							loop
+							playsInline
+							preload="auto"
+							className="w-full h-auto rounded-sm "
+						>
+							<source src="/chatdku_promo.webm" type="video/webm" />
+							{t("home.hero.videoFallback")}
+						</video>
 						<Link href="https://youtu.be/SdItulvqdLo">
 							<Button variant="link" className="m-2 text-muted-foreground">
 								{t("home.hero.watchYouTube")} <ArrowUpRight />
