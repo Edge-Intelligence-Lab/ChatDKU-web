@@ -57,6 +57,7 @@ import {
 } from "@/components/ui/tooltip";
 
 import { useLanguage } from "@/components/language-provider";
+import Image from "next/image";
 
 interface SidebarProps {
 	onCampusMap: () => void;
@@ -186,7 +187,15 @@ export default function Side({
 									href={"/"}
 									className="flex items-center gap-x-1 font-inter font-bold"
 								>
-									<DynamicLogo width={35} height={35} />
+									<Image
+										src="/logos/new_logo.svg"
+										alt="Logo"
+										className="relative"
+										priority
+										loading="eager"
+										width={30}
+										height={30}
+									/>
 									ChatDKU
 								</Link>
 							</SheetTitle>

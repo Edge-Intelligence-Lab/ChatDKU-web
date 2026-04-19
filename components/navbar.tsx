@@ -28,7 +28,7 @@ export function Navbar() {
 	const { t } = useLanguage();
 
 	return (
-		<NavigationMenu className="w-full max-w-[98vw] mx-auto flex justify-between items-center border-b lg:border-none fixed top-0 left-1/2 -translate-x-1/2 z-10 backdrop-blur-md lg:backdrop-blur-none bg-gradient-to-b from-background to-transparent">
+		<NavigationMenu className="w-full max-w-[98vw] mx-auto flex justify-between items-center border-none fixed top-0 left-1/2 -translate-x-1/2 z-10 backdrop-blur-md lg:backdrop-blur-none bg-gradient-to-b from-background to-transparent">
 			<div className="flex flex-row items-center ">
 				<Link
 					href={"/chat"}
