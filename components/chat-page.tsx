@@ -9,6 +9,7 @@ import {
 	type SetStateAction,
 } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import Cookies from "js-cookie";
 
 import { AIInput } from "@/components/ui/ai-input";
@@ -16,7 +17,10 @@ import { Navbar } from "@/components/navbar";
 import { PromptRecs } from "@/components/prompt-recs";
 import WelcomeBanner from "@/components/welcome-banner";
 import Side from "@/components/side";
-import CampusMap from "@/components/campus-map";
+
+const CampusMap = dynamic(() => import("@/components/campus-map"), {
+	ssr: false,
+});
 import { useLanguage } from "@/components/language-provider";
 import {
 	ChatMessage,

@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
 
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
+
   // Add rewrites for development mode to proxy API calls.
   // Using `fallback` ensures local Route Handlers (including dynamic ones like
   // /api/c/[sessionId]/messages) are always checked first. The production server
