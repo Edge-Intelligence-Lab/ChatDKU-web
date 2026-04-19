@@ -3,6 +3,8 @@
 import {
 	useCallback,
 	useEffect,
+	useId,
+	useRef,
 	useState,
 	type SetStateAction,
 } from "react";
@@ -16,28 +18,30 @@ import WelcomeBanner from "@/components/welcome-banner";
 import Side from "@/components/side";
 import CampusMap from "@/components/campus-map";
 import { useLanguage } from "@/components/language-provider";
+import {
+	ChatMessage,
+	type MessageRole,
+	type MessageVariant,
+} from "@/components/chat/chat-message";
+import { PipelineLoaderMessage } from "@/components/chat/pipeline-loader-message";
+import { FeedbackPrompt } from "@/components/chat/feedback-prompt";
 
 import { getStoredEndpoint } from "@/lib/convos";
 import {
-	getPipelineLoaderHTML,
-	startPipelineLoader,
-} from "@/lib/pipelineLoader";
-import {
 	buildPipelineSteps,
 	configureMarked,
-	parseMarkdown,
 	streamFromReader,
 	streamText,
 } from "@/lib/chat-stream";
 
 export interface ChatPageProps {
-	/** Enables the artificial pipeline-loader delay and wider prompts. */
+	/** Enables the artificial pipeline-loader delay and narrower user bubbles. */
 	isDev?: boolean;
 	/** Delay before showing the response (dev only). */
 	artificialDelayMs?: number;
 	/** Delay between fake-stream chunks when real streaming fails. */
 	chunkDelayMs?: number;
-	/** If set, enables the campus-map side view. Only used in main app. */
+	/** Enables the campus-map side view. Only used in main app. */
 	enableCampusMap?: boolean;
 	/** Require chatdku_token cookie in addition to terms acceptance. */
 	requireToken?: boolean;
@@ -46,6 +50,17 @@ export interface ChatPageProps {
 	/** Literal disclaimer override (for the dev page). */
 	disclaimerText?: string;
 }
+
+interface ChatMessageState {
+	id: string;
+	role: MessageRole;
+	content: string;
+	variant?: MessageVariant;
+	/** Whether the feedback prompt should be shown below this (bot) message. */
+	showFeedback?: boolean;
+}
+
+const CHAT_LOG_ID = "chat-log";
 
 export function ChatPage({
 	isDev = false,
@@ -56,6 +71,10 @@ export function ChatPage({
 	disclaimerKey = "chat.disclaimer",
 	disclaimerText,
 }: ChatPageProps) {
+	const [messages, setMessages] = useState<ChatMessageState[]>([]);
+	const [pipelineActive, setPipelineActive] = useState(false);
+	const [pipelineDismissing, setPipelineDismissing] = useState(false);
+
 	const [showStarter, setShowStarter] = useState(true);
 	const [isChatboxCentered, setIsChatboxCentered] = useState(true);
 	const [chatHistory, setChatHistory] = useState<[string, string][]>([]);
@@ -67,10 +86,14 @@ export function ChatPage({
 	const [activeReference, setActiveReference] = useState<string | null>(null);
 	const [isSending, setIsSending] = useState(false);
 
+	const chatLogRef = useRef<HTMLDivElement>(null);
+	const messageIdCounter = useRef(0);
 	const router = useRouter();
 	const { t } = useLanguage();
+	const instanceId = useId();
 
 	const resolvedChunkDelay = chunkDelayMs ?? (isDev ? 90 : 60);
+	const pipelineSteps = buildPipelineSteps(t);
 
 	useEffect(() => {
 		configureMarked();
@@ -84,7 +107,37 @@ export function ChatPage({
 		}
 	}, [router, requireToken]);
 
-	const handleFeedback = useCallback(
+	const scrollToBottom = useCallback(() => {
+		const el = chatLogRef.current;
+		if (!el) return;
+		el.scrollTo(0, el.scrollHeight);
+	}, []);
+
+	useEffect(() => {
+		scrollToBottom();
+	}, [messages, pipelineActive, scrollToBottom]);
+
+	const nextId = () => {
+		messageIdCounter.current += 1;
+		return `${instanceId}-${messageIdCounter.current}`;
+	};
+
+	const pushMessage = (msg: Omit<ChatMessageState, "id">) => {
+		const id = nextId();
+		setMessages((prev) => [...prev, { ...msg, id }]);
+		return id;
+	};
+
+	const updateMessage = (
+		id: string,
+		patch: Partial<Omit<ChatMessageState, "id">>,
+	) => {
+		setMessages((prev) =>
+			prev.map((m) => (m.id === id ? { ...m, ...patch } : m)),
+		);
+	};
+
+	const sendFeedback = useCallback(
 		async (userInput: string, answer: string, reason: string) => {
 			try {
 				await fetch("/api/feedback", {
@@ -103,194 +156,6 @@ export function ChatPage({
 		[],
 	);
 
-	// NOTE: legacy imperative DOM rendering preserved from the original pages.
-	// Chat messages are built via innerHTML rather than React because streaming
-	// + markdown + feedback-modal wiring was written that way. A future refactor
-	// should render these as proper React components.
-	const addMessageToChat = useCallback(
-		(
-			role: "user" | "bot",
-			content: string,
-			className: string,
-			shouldStream = false,
-		) => {
-			const chatLog = document.getElementById("chat-log");
-			const messageElement = document.createElement("div");
-			const isUser = role === "user";
-			messageElement.className = `flex ${isUser ? "justify-end" : ""} w-full`;
-
-			const userMaxWidth = isDev
-				? "items-end max-w-[85%] sm:max-w-[80%]"
-				: "items-end max-w-[95%] sm:max-w-[85%]";
-
-			if (isUser || !shouldStream) {
-				const isRawHtml =
-					typeof content === "string" && content.startsWith("<");
-				const sanitized = content
-					? isRawHtml
-						? content
-						: parseMarkdown(content).trim()
-					: "";
-
-				messageElement.innerHTML = `
-        <div class="flex flex-col ${isUser ? userMaxWidth : "items-start w-full sm:max-w-[85%]"}">
-          <div class="flex flex-col ${isUser ? "lg:flex-row-reverse" : "lg:flex-row"} gap-3 px-4 py-2 ${className} rounded-3xl w-full overflow-hidden">
-            ${
-							isUser
-								? ""
-								: '<div class="flex-shrink-0"><div class="w-8 h-8 rounded-full bg-transparent flex items-center justify-center"><img src="/logos/new_logo.svg" class="block dark:hidden p-1.5" alt="Logo"/><img src="/logos/new_logo.svg" class="hidden dark:block p-1.5" alt="Logo"/></div></div>'
-						}
-            <div class="${isUser ? "text-right" : "text-left"} overflow-hidden">
-              <div class="text-foreground break-words overflow-wrap-anywhere markdown-content ${!isUser ? "text-[0.9375rem]" : ""}">${sanitized}</div>
-            </div>
-          </div>
-        </div>
-      `;
-				chatLog?.appendChild(messageElement);
-				chatLog?.scrollTo(0, chatLog.scrollHeight);
-				return messageElement.querySelector(".flex.flex-col");
-			}
-
-			messageElement.innerHTML = `
-        <div class="flex flex-col items-start w-full sm:max-w-[85%]">
-          <div class="flex flex-col lg:flex-row gap-3 px-4 py-2 ${className} rounded-3xl w-full overflow-hidden">
-            <div class="flex-shrink-0"><div class="w-8 h-8 rounded-full bg-transparent flex items-center justify-center"><img src="/logos/new_logo.svg" class="block dark:hidden p-1.5" alt="Logo"/><img src="/logos/new_logo.svg" class="hidden dark:block p-1.5" alt="Logo"/></div></div>
-            <div class="text-left overflow-hidden" id="stream-container">
-            </div>
-          </div>
-        </div>
-      `;
-			chatLog?.appendChild(messageElement);
-			chatLog?.scrollTo(0, chatLog.scrollHeight);
-
-			const streamContainer = messageElement.querySelector(
-				"#stream-container",
-			) as HTMLElement | null;
-			if (streamContainer) {
-				streamText(content, streamContainer, resolvedChunkDelay);
-			}
-
-			return messageElement.querySelector(".flex.flex-col");
-		},
-		[isDev, resolvedChunkDelay],
-	);
-
-	const addBotPlaceholder = useCallback(
-		(html: string, className: string) => {
-			const chatLog = document.getElementById("chat-log");
-			const messageElement = document.createElement("div");
-			messageElement.className = "flex w-full";
-			messageElement.innerHTML = `
-        <div class="flex flex-col items-start w-full sm:max-w-[85%]">
-          <div class="flex flex-col lg:flex-row gap-3 px-4 py-2 ${className} rounded-3xl w-full overflow-hidden">
-            <div class="flex-shrink-0"><div class="w-8 h-8 rounded-full bg-transparent flex items-center justify-center"><img src="/logos/new_logo.svg" class="block dark:hidden p-1.5" alt="Logo"/><img src="/logos/new_logo.svg" class="hidden dark:block p-1.5" alt="Logo"/></div></div>
-            <div class="text-left overflow-hidden">
-              ${html}
-            </div>
-          </div>
-        </div>
-      `;
-			chatLog?.appendChild(messageElement);
-			chatLog?.scrollTo(0, chatLog.scrollHeight);
-			return messageElement.querySelector(".flex.flex-col");
-		},
-		[],
-	);
-
-	const attachFeedbackPrompt = useCallback(
-		(messageDiv: Element, userInput: string, botAnswer: string) => {
-			const feedbackDiv = document.createElement("div");
-			feedbackDiv.className = "ml-4 mb-2";
-			feedbackDiv.innerHTML = `
-        <div class="flex items-center gap-2 text-left">
-          <span class="text-sm text-muted-foreground">${t("chat.feedbackQuestion")}</span>
-          <button class="feedback-yes px-2 py-1 text-sm rounded-md bg-secondary/50 hover:bg-secondary">${t("chat.feedbackYes")}</button>
-          <button class="feedback-no px-2 py-1 text-sm rounded-md bg-secondary/50 transition-all duration-300 hover:bg-red-600 hover:text-white">${t("chat.feedbackNo")}</button>
-        </div>
-      `;
-
-			const yesButton = feedbackDiv.querySelector(".feedback-yes");
-			const noButton = feedbackDiv.querySelector(".feedback-no");
-
-			yesButton?.addEventListener("click", () => {
-				handleFeedback(userInput, botAnswer, "helpful");
-				feedbackDiv.innerHTML = `<span class="text-sm text-muted-foreground">${t("chat.feedbackThanks")}</span>`;
-			});
-
-			noButton?.addEventListener("click", () => {
-				feedbackDiv.innerHTML = `
-          <div class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
-            <div class="fixed inset-0 flex items-center justify-center">
-              <div class="dialog bg-background border shadow-lg rounded-lg w-[90%] max-w-md p-6">
-                <h3 class="text-lg font-semibold mb-4">${t("chat.feedbackWhyTitle")}</h3>
-                <div class="feedback-options space-y-2" id="reason-options">
-                  <button class="reason-btn w-full text-left px-3 py-2 rounded-md border hover:bg-accent text-foreground" data-reason="not_correct">${t("chat.feedbackNotCorrect")}</button>
-                  <button class="reason-btn w-full text-left px-3 py-2 rounded-md border hover:bg-accent text-foreground" data-reason="not_clear">${t("chat.feedbackNotClear")}</button>
-                  <button class="reason-btn w-full text-left px-3 py-2 rounded-md border hover:bg-accent text-foreground" data-reason="not_relevant">${t("chat.feedbackNotRelevant")}</button>
-                  <button class="reason-btn w-full text-left px-3 py-2 rounded-md border hover:bg-accent text-foreground" data-reason="other">${t("chat.feedbackOther")}</button>
-                </div>
-                <textarea id="custom-reason" class="w-full mt-4 p-2 rounded-md border bg-background text-foreground hidden" rows="5" placeholder="${t("chat.feedbackCustomPlaceholder")}"></textarea>
-                <div class="flex justify-end mt-6 space-x-2">
-                  <button id="submit-feedback" class="btn px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90">${t("chat.feedbackSubmit")}</button>
-                  <button id="cancel-feedback" class="btn px-4 py-2 text-sm rounded-md bg-secondary text-secondary-foreground hover:bg-destructive hover:text-destructive-foreground">${t("chat.feedbackCancel")}</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-
-				const optionButtons = feedbackDiv.querySelectorAll(".reason-btn");
-				const customReason = feedbackDiv.querySelector(
-					"#custom-reason",
-				) as HTMLTextAreaElement;
-				const submitBtn = feedbackDiv.querySelector("#submit-feedback");
-				const cancelBtn = feedbackDiv.querySelector("#cancel-feedback");
-
-				let selectedReason: string | null = null;
-
-				optionButtons.forEach((btn) => {
-					btn.addEventListener("click", () => {
-						selectedReason = (btn as HTMLElement).dataset.reason || null;
-						optionButtons.forEach((b) =>
-							b.classList.remove("bg-secondary", "text-white"),
-						);
-						btn.classList.add("bg-secondary", "text-black");
-
-						if (selectedReason === "other") {
-							customReason.classList.remove("hidden");
-						} else {
-							customReason.classList.add("hidden");
-						}
-					});
-				});
-
-				submitBtn?.addEventListener("click", () => {
-					if (!selectedReason) return;
-					const reasonToSend =
-						selectedReason === "other"
-							? customReason.value.trim()
-							: selectedReason;
-
-					if (selectedReason === "other" && !reasonToSend) {
-						customReason.classList.add("border-destructive");
-						customReason.placeholder = t("chat.feedbackCustomRequired");
-						return;
-					}
-
-					handleFeedback(userInput, botAnswer, reasonToSend);
-					feedbackDiv.innerHTML = `<span class="text-sm text-muted-foreground">${t("chat.feedbackThanks")}</span>`;
-				});
-
-				cancelBtn?.addEventListener("click", () => {
-					feedbackDiv.innerHTML = `<span class="text-sm text-muted-foreground">${t("chat.feedbackCanceled")}</span>`;
-				});
-			});
-
-			messageDiv.appendChild(feedbackDiv);
-		},
-		[t, handleFeedback],
-	);
-
 	const handleSubmit = useCallback(
 		async (value: string) => {
 			if (!value.trim() || isSending) return;
@@ -305,20 +170,10 @@ export function ChatPage({
 			setShowStarter(false);
 			setIsChatboxCentered(false);
 
-			addMessageToChat(
-				"user",
-				finalValue,
-				"bg-muted/50 dark:bg-muted/50 text-sm",
-			);
+			pushMessage({ role: "user", content: finalValue });
 
-			const pipelineSteps = buildPipelineSteps(t);
-			const botMessage = addBotPlaceholder(
-				getPipelineLoaderHTML(pipelineSteps[0].label),
-				"text-sm",
-			);
-			const pipelineLoader = startPipelineLoader(botMessage, {
-				steps: pipelineSteps,
-			});
+			setPipelineDismissing(false);
+			setPipelineActive(true);
 
 			try {
 				const fetchChat = () => {
@@ -337,8 +192,8 @@ export function ChatPage({
 
 				setChatHistory((prev) => [...prev, ["user", finalValue]]);
 
-				// Dev: stall briefly so the pipeline loader is actually visible
-				// against fast local mocks.
+				// Dev: stall briefly so the pipeline loader is visible against fast
+				// local mocks.
 				const [response] = await Promise.all([
 					fetchChat(),
 					artificialDelayMs > 0
@@ -348,19 +203,13 @@ export function ChatPage({
 
 				if (!response.ok) throw new Error("Failed to fetch response");
 
-				await pipelineLoader.dismiss();
-				botMessage?.remove();
+				// Dismiss the pipeline loader (awaits fade-out).
+				await dismissPipeline(setPipelineDismissing, setPipelineActive);
 
-				const messageDiv = addMessageToChat("bot", "", "text-sm", true);
-				const streamContainer =
-					messageDiv?.querySelector("#stream-container");
-				if (!streamContainer) {
-					throw new Error("Failed to create stream container");
-				}
+				const botId = pushMessage({ role: "bot", content: "" });
 
-				const streamResult = await streamFromReader(
-					response,
-					streamContainer as HTMLElement,
+				const streamResult = await streamFromReader(response, (accumulated) =>
+					updateMessage(botId, { content: accumulated }),
 				);
 
 				let data = streamResult.text;
@@ -372,27 +221,23 @@ export function ChatPage({
 							data = "Error: Failed to read response";
 						}
 					}
-					(streamContainer as HTMLElement).innerHTML = "";
+					updateMessage(botId, { content: "" });
 					await streamText(
 						data,
-						streamContainer as HTMLElement,
+						(accumulated) => updateMessage(botId, { content: accumulated }),
 						resolvedChunkDelay,
 					);
 				}
 
 				setChatHistory((prev) => [...prev, ["bot", data]]);
-
-				if (messageDiv) {
-					attachFeedbackPrompt(messageDiv, finalValue, data);
-				}
+				updateMessage(botId, { showFeedback: true });
 			} catch (error) {
-				await pipelineLoader.dismiss();
-				botMessage?.remove();
-				addMessageToChat(
-					"bot",
-					`Error: ${error instanceof Error ? error.message : "An unknown error occurred"}`,
-					"bg-destructive/10 dark:bg-destructive/20",
-				);
+				await dismissPipeline(setPipelineDismissing, setPipelineActive);
+				pushMessage({
+					role: "bot",
+					variant: "error",
+					content: `Error: ${error instanceof Error ? error.message : "An unknown error occurred"}`,
+				});
 			} finally {
 				setIsSending(false);
 			}
@@ -400,10 +245,6 @@ export function ChatPage({
 		[
 			isSending,
 			activeReference,
-			addMessageToChat,
-			addBotPlaceholder,
-			attachFeedbackPrompt,
-			t,
 			chatHistory,
 			artificialDelayMs,
 			resolvedChunkDelay,
@@ -416,10 +257,9 @@ export function ChatPage({
 		setIsChatboxCentered(true);
 		setChatHistory([]);
 		setInputValue("");
-		const chatLog = document.getElementById("chat-log");
-		if (chatLog) chatLog.innerHTML = "";
-		const aiInput = document.getElementById("ai-input") as HTMLTextAreaElement;
-		if (aiInput) aiInput.value = "";
+		setMessages([]);
+		setPipelineActive(false);
+		setPipelineDismissing(false);
 	};
 
 	return (
@@ -444,9 +284,38 @@ export function ChatPage({
 				<main className="flex-1 w-full flex flex-col items-center pt-16 relative">
 					{activeView === "chat" && (
 						<div
-							id="chat-log"
+							id={CHAT_LOG_ID}
+							ref={chatLogRef}
 							className="w-full max-w-3xl mx-auto space-y-4 p-4 pb-42 overflow-y-auto"
-						></div>
+						>
+							{messages.map((msg) => (
+								<ChatMessage
+									key={msg.id}
+									role={msg.role}
+									content={msg.content}
+									variant={msg.variant}
+									isDev={isDev}
+								>
+									{msg.showFeedback && (
+										<FeedbackPrompt
+											onSubmit={(reason) =>
+												sendFeedback(
+													findUserPrompt(messages, msg.id) ?? "",
+													msg.content,
+													reason,
+												)
+											}
+										/>
+									)}
+								</ChatMessage>
+							))}
+							{pipelineActive && (
+								<PipelineLoaderMessage
+									steps={pipelineSteps}
+									dismissing={pipelineDismissing}
+								/>
+							)}
+						</div>
 					)}
 					{enableCampusMap && activeView === "campus" && (
 						<CampusMap
@@ -529,5 +398,29 @@ export function ChatPage({
 		</>
 	);
 }
+
+const findUserPrompt = (
+	messages: ChatMessageState[],
+	botId: string,
+): string | null => {
+	const idx = messages.findIndex((m) => m.id === botId);
+	for (let i = idx - 1; i >= 0; i -= 1) {
+		if (messages[i].role === "user") return messages[i].content;
+	}
+	return null;
+};
+
+const dismissPipeline = async (
+	setDismissing: (v: boolean) => void,
+	setActive: (v: boolean) => void,
+) => {
+	setDismissing(true);
+	// pipelineLoader's dismiss transition is ~220ms. Waiting here keeps the
+	// existing behavior where the bot message only appears after the loader
+	// finishes fading out.
+	await new Promise((r) => setTimeout(r, 240));
+	setActive(false);
+	setDismissing(false);
+};
 
 export default ChatPage;

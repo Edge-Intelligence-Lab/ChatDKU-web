@@ -34,14 +34,13 @@ export interface StreamResult {
 	text: string;
 }
 
-// Reads a streaming Response body and re-renders markdown into `container` on
-// every chunk. Returns accumulated text plus whether streaming succeeded; on
-// failure the caller is expected to fall back to `streamText` using the
-// response text.
+// Reads a streaming Response body, invoking `onProgress` with the accumulated
+// text each time a chunk arrives. Returns accumulated text plus whether
+// streaming succeeded; on failure the caller is expected to fall back to
+// `streamText` using the response text.
 export const streamFromReader = async (
 	response: Response,
-	container: HTMLElement,
-	chatLogId = "chat-log",
+	onProgress: (accumulated: string) => void,
 ): Promise<StreamResult> => {
 	if (!response.body) return { success: false, text: "" };
 
@@ -49,12 +48,6 @@ export const streamFromReader = async (
 	try {
 		const reader = response.body.getReader();
 		const decoder = new TextDecoder();
-
-		container.innerHTML = "";
-		const contentDiv = document.createElement("div");
-		contentDiv.className =
-			"text-foreground break-words overflow-wrap-anywhere markdown-content text-[0.9375rem]";
-		container.appendChild(contentDiv);
 
 		let firstChunk = true;
 		while (true) {
@@ -67,14 +60,11 @@ export const streamFromReader = async (
 			}
 
 			accumulated += decoder.decode(value, { stream: true });
-			contentDiv.innerHTML = parseMarkdown(accumulated);
-
-			const chatLog = document.getElementById(chatLogId);
-			chatLog?.scrollTo(0, chatLog.scrollHeight);
+			onProgress(accumulated);
 		}
 
 		accumulated += decoder.decode();
-		contentDiv.innerHTML = parseMarkdown(accumulated);
+		onProgress(accumulated);
 		return { success: true, text: accumulated };
 	} catch (error) {
 		console.warn("Stream reading failed, reverting to simulated stream", error);
@@ -82,36 +72,16 @@ export const streamFromReader = async (
 	}
 };
 
-const STREAM_STYLE_ID = "stream-style";
-
-const ensureStreamStyles = () => {
-	if (typeof document === "undefined") return;
-	if (document.getElementById(STREAM_STYLE_ID)) return;
-	const style = document.createElement("style");
-	style.id = STREAM_STYLE_ID;
-	style.innerHTML = `
-    .stream-chunk { opacity: 0; transform: translateY(2px); transition: opacity 120ms ease-out, transform 120ms ease-out; }
-    .stream-chunk.visible { opacity: 1; transform: translateY(0); }
-  `;
-	document.head.appendChild(style);
-};
-
-// Fallback: paint the text a chunk at a time with a small fade-in. Used when
-// `streamFromReader` fails or when rendering precomputed text.
+// Fallback for when real streaming fails: paints `text` in paragraph- or
+// sentence-sized chunks with a small delay between each, invoking `onProgress`
+// with the accumulated text so callers can re-render as it grows.
 export const streamText = async (
 	text: string,
-	container: HTMLElement,
+	onProgress: (accumulated: string) => void,
 	chunkDelayMs = 60,
-): Promise<HTMLElement> => {
-	ensureStreamStyles();
-
+): Promise<void> => {
 	const cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, "");
-	const streamContainer = document.createElement("div");
-	streamContainer.className =
-		"text-foreground  break-words overflow-wrap-anywhere markdown-content text-[0.9375rem]";
-	container.appendChild(streamContainer);
 
-	// Prefer paragraph chunks; fall back to sentences if only one paragraph.
 	const paragraphs = cleaned
 		.split(/\n{2,}/)
 		.map((s) => s.trim())
@@ -124,18 +94,10 @@ export const streamText = async (
 					.map((s) => s.trim())
 					.filter(Boolean);
 
+	let accumulated = "";
 	for (const chunk of chunks) {
-		const chunkDiv = document.createElement("div");
-		chunkDiv.className = "stream-chunk";
-		chunkDiv.innerHTML = parseMarkdown(chunk);
-		streamContainer.appendChild(chunkDiv);
-
-		// Force reflow so the transition fires when `visible` is added next.
-		void chunkDiv.offsetHeight;
-		requestAnimationFrame(() => chunkDiv.classList.add("visible"));
-
+		accumulated = accumulated ? `${accumulated}\n\n${chunk}` : chunk;
+		onProgress(accumulated);
 		await new Promise((resolve) => setTimeout(resolve, chunkDelayMs));
 	}
-
-	return streamContainer;
 };
