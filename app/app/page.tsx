@@ -7,10 +7,10 @@ import Cookies from "js-cookie";
 import { getStoredEndpoint } from "@/lib/convos";
 import { AIInput } from "@/components/ui/ai-input";
 import { Navbar } from "@/components/navbar";
-import { PromptRecs } from "@/components/prompt_recs";
-import WelcomeBanner from "@/components/WelcomeBanner";
+import { PromptRecs } from "@/components/prompt-recs";
+import WelcomeBanner from "@/components/welcome-banner";
 import Side from "@/components/side";
-import CampusMap from "@/components/CampusMap";
+import CampusMap from "@/components/campus-map";
 import { useLanguage } from "@/components/language-provider";
 import {
 	DEFAULT_PIPELINE_STEP_IDS,

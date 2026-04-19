@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
-import { BackButton } from "./backButton";
+import { BackButton } from "./back-button";
 import { useLanguage } from "@/components/language-provider";
 
 type AboutProps = {

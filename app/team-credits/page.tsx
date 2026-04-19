@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { BackButton } from "@/components/backButton";
+import { BackButton } from "@/components/back-button";
 import { useLanguage } from "@/components/language-provider";
 import Link from "next/link";
 

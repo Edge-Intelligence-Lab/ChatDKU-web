@@ -64,12 +64,12 @@ jest.mock("@/components/side", () => ({
   ),
 }));
 
-jest.mock("@/components/WelcomeBanner", () => ({
+jest.mock("@/components/welcome-banner", () => ({
   __esModule: true,
   default: () => <div data-testid="welcome-banner">Welcome</div>,
 }));
 
-jest.mock("@/components/prompt_recs", () => ({
+jest.mock("@/components/prompt-recs", () => ({
   PromptRecs: ({ onPromptSelect }: any) => (
     <div>
       <button onClick={() => onPromptSelect("Test prompt")}>Test Prompt</button>
