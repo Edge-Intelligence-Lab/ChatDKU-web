@@ -182,7 +182,10 @@ export default function Side({
 					<SheetContent side="left">
 						<SheetHeader>
 							<SheetTitle>
-								<Link href={"/"} className="flex items-center gap-x-1">
+								<Link
+									href={"/"}
+									className="flex items-center gap-x-1 font-inter font-bold"
+								>
 									<DynamicLogo width={35} height={35} />
 									ChatDKU
 								</Link>
@@ -227,7 +230,7 @@ export default function Side({
 								</p>
 								<ComboBoxResponsive
 									inputValue={currentEndpoint || ""}
-									onEndpointChange={onEndpointChange ?? (() => { })}
+									onEndpointChange={onEndpointChange ?? (() => {})}
 								/>
 							</div>
 							<TooltipProvider>

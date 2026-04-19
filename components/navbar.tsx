@@ -31,7 +31,7 @@ export function Navbar() {
 		<NavigationMenu className="w-full max-w-[98vw] mx-auto flex justify-between items-center border-b lg:border-none fixed top-0 left-1/2 -translate-x-1/2 z-10 backdrop-blur-md lg:backdrop-blur-none bg-gradient-to-b from-background to-transparent">
 			<div className="flex flex-row items-center ">
 				<Link
-					href={"/"}
+					href={"/chat"}
 					className="flex flex-row items-center p-3 pr-0 space-x-2"
 				>
 					<div className="w-5" />
