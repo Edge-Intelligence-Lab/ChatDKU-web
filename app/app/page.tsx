@@ -341,7 +341,7 @@ export default function App() {
 						className={`w-full max-w-[95vw] p-2 pt-0 transition-all duration-300 ${
 							isChatboxCentered
 								? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-								: "fixed bottom-0 left-1/2 -translate-x-1/2 rounded-t-3xl backdrop-blur-md md:backdrop-blur-none z-10"
+								: "fixed bottom-0 left-1/2 -translate-x-1/2 rounded-t-3xl backdrop-blur-md bg-gradient-to-b from-transparent to-background md:backdrop-blur-none z-10"
 						}`}
 					>
 						{showStarter && (

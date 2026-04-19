@@ -33,15 +33,15 @@ export default function LoginPage() {
 
 	const router = useRouter();
 
-	useEffect(() => {
-		if (
-			Cookies.get("chatdku_token") &&
-			Cookies.get("terms_accepted") &&
-			!(process.env.NODE_ENV === "development")
-		) {
-			router.replace("/app");
-		}
-	}, [router]);
+	// useEffect(() => {
+	// 	if (
+	// 		Cookies.get("chatdku_token") &&
+	// 		Cookies.get("terms_accepted") &&
+	// 		!(process.env.NODE_ENV === "development")
+	// 	) {
+	// 		router.replace("/app");
+	// 	}
+	// }, [router]);
 
 	const handleProceed = async () => {
 		if (termsAccepted) {
