@@ -129,7 +129,7 @@ export default function IntroPage() {
 	}, []);
 
 	return (
-		<div className="min-h-screen bg-background text-foreground">
+		<div className="min-h-screen bg-background font-inter text-foreground">
 			{/* ── Navbar ── */}
 			<nav className="sticky top-0 z-50  bg-background/80 backdrop-blur-sm rounded-b-sm ">
 				<div className="lg:px-20 md:px-10 px-5 mx-auto py-3 sm:py-5 flex items-center justify-between">
@@ -140,7 +140,7 @@ export default function IntroPage() {
 							width={40}
 							height={40}
 						/>
-						<span className="font-bold text-3xl">ChatDKU</span>
+						<span className="font-bold font-inter text-3xl">ChatDKU</span>
 					</div>
 					<div className="flex items-center">
 						<NavLinks className="hidden sm:inline-block pr-4" />
@@ -235,16 +235,16 @@ export default function IntroPage() {
 
 			{/* ── Partner Logos ── */}
 			<section className=" text-center">
-				<div className="mx-auto md:px-20 flex flex-col items-center gap-4 bg-gradient-to-r dark:from-transparent from-blue-400 via-blue-600 to-blue-400 py-5 ">
+				<div className="mx-auto md:px-20 flex flex-col items-center gap-4 bg-gradient-to-r from-blue-400 via-blue-600 to-blue-400 dark:from-transparent dark:to-transparent py-5 ">
 					<p className="text-white text-sm tracking-wide uppercase font-serif">
 						{t("home.partners.label")}
 					</p>
 					<Image
 						src="/partner-logos.png"
 						alt="Partner logos"
-						width={800}
+						width={900}
 						height={100}
-						className="w-full max-w-2xl h-auto object-contain opacity-90"
+						className="w-full max-w-3xl h-auto object-contain opacity-90"
 					/>
 				</div>
 			</section>

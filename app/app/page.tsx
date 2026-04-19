@@ -12,6 +12,13 @@ import WelcomeBanner from "@/components/WelcomeBanner";
 import Side from "@/components/side";
 import CampusMap from "@/components/CampusMap";
 import { useLanguage } from "@/components/language-provider";
+import {
+	DEFAULT_PIPELINE_STEP_IDS,
+	getPipelineLoaderHTML,
+	startPipelineLoader,
+	type PipelineStep,
+} from "@/lib/pipelineLoader";
+import type { DictionaryKey } from "@/lib/i18n";
 
 const configureMarked = () => {
 	marked.setOptions({
@@ -32,71 +39,13 @@ const parseMarkdown = (content: string): string => {
 		: cleanedContent;
 };
 
-// Inject styles for the fancy AI loader once per document
-const ensureSearchLoaderStyles = () => {
-	if (typeof document === "undefined") return;
-	if (document.getElementById("search-loader-style")) return;
-	const style = document.createElement("style");
-	style.id = "search-loader-style";
-	style.innerHTML = `
-    @keyframes iconCycle {
-      0% { opacity: 0; transform: scale(0.92) translateY(2px) rotate(-2deg); }
-      12% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
-      28% { opacity: 1; transform: scale(1.02) translateY(0) rotate(0.5deg); }
-      40% { opacity: 0; transform: scale(0.98) translateY(-1px) rotate(2deg); }
-      100% { opacity: 0; }
-    }
-    @keyframes dotPulse {
-      0%, 20% { opacity: 0.2; }
-      50% { opacity: 1; }
-      80%, 100% { opacity: 0.2; }
-    }
-    .cdku-loader .icon-cycle { animation: iconCycle 2400ms linear infinite; }
-    .cdku-loader .icon-1 { animation-delay: 0ms; }
-    .cdku-loader .icon-2 { animation-delay: 480ms; }
-    .cdku-loader .icon-3 { animation-delay: 960ms; }
-    .cdku-loader .icon-4 { animation-delay: 1440ms; }
-    .cdku-loader .icon-5 { animation-delay: 1920ms; }
-    .cdku-loader .dot { width: 3px; height: 3px; border-radius: 9999px; background-color: currentColor; display: inline-block; margin-left: 3px; opacity: 0.2; animation: dotPulse 1200ms ease-in-out infinite; }
-    .cdku-loader .dot:nth-child(2) { animation-delay: 150ms; }
-    .cdku-loader .dot:nth-child(3) { animation-delay: 300ms; }
-  `;
-	document.head.appendChild(style);
-};
-
-// Returns HTML string for the fancy loader using inline Lucide-like SVGs
-const getSearchLoaderHTML = (searchingText: string): string => {
-	const search =
-		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="absolute inset-0 icon-cycle icon-1"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>';
-	const fileSearch =
-		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="absolute inset-0 icon-cycle icon-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="11.5" cy="14.5" r="2.5"/><path d="m13.3 16.3 1.7 1.7"/></svg>';
-	const compass =
-		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="absolute inset-0 icon-cycle icon-3"><circle cx="12" cy="12" r="10"/><path d="m16 8-4 8-4-4 8-4Z"/></svg>';
-	const radar =
-		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="absolute inset-0 icon-cycle icon-4"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M22 12a10 10 0 1 1-10-10"/><path d="M14.31 8.69 21 2"/><circle cx="12" cy="12" r="0.5"/></svg>';
-	const sparkles =
-		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="absolute inset-0 icon-cycle icon-5"><path d="M12 3l1.9 3.9L18 9l-4.1 2.1L12 15l-1.9-3.9L6 9l4.1-2.1Z"/><path d="M20 17l.95 1.95L23 20l-1.95.95L20 23l-.95-2.05L17 20l2.05-.95Z"/><path d="M4 17l.95 1.95L7 20l-1.95.95L4 23l-.95-2.05L1 20l2.05-.95Z"/></svg>';
-
-	return `
-    <div class="cdku-loader flex items-center gap-2 sm:gap-2.5 text-foreground/80">
-      <div class="relative inline-flex items-center justify-center align-middle" style="width:1em;height:1em;">
-        ${search}
-        ${fileSearch}
-        ${compass}
-        ${radar}
-        ${sparkles}
-      </div>
-      <div class="text-xs sm:text-sm leading-none tracking-tight">
-        <span class="opacity-80">${searchingText}</span>
-        <span class="ml-1 inline-flex align-middle">
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
-        </span>
-      </div>
-    </div>
-  `;
-};
+const buildPipelineSteps = (
+	t: (key: DictionaryKey) => string,
+): PipelineStep[] =>
+	DEFAULT_PIPELINE_STEP_IDS.map((id) => ({
+		id,
+		label: t(`chat.step.${id}` as DictionaryKey),
+	}));
 
 const streamFromReader = async (
 	response: Response,
@@ -354,7 +303,9 @@ export default function App() {
 					if (chatLog) {
 						chatLog.innerHTML = "";
 					}
-					const aiInput = document.getElementById("ai-input") as HTMLTextAreaElement;
+					const aiInput = document.getElementById(
+						"ai-input",
+					) as HTMLTextAreaElement;
 					if (aiInput) {
 						aiInput.value = "";
 					}
@@ -386,151 +337,157 @@ export default function App() {
 				</main>
 
 				{activeView === "chat" && (
-				<div
-					className={`w-full max-w-[95vw] p-2 pt-0 transition-all duration-300 ${
-						isChatboxCentered
-							? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-							: "fixed bottom-0 left-1/2 -translate-x-1/2 rounded-t-3xl backdrop-blur-md md:backdrop-blur-none z-10"
-					}`}
-				>
-					{showStarter && (
-						<div className="w-full flex justify-center">
-							<div className="flex flex-col items-center p-4 w-4/5 md:max-w-1/2 sm:max-w-4/5">
-								<WelcomeBanner />
+					<div
+						className={`w-full max-w-[95vw] p-2 pt-0 transition-all duration-300 ${
+							isChatboxCentered
+								? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+								: "fixed bottom-0 left-1/2 -translate-x-1/2 rounded-t-3xl backdrop-blur-md md:backdrop-blur-none z-10"
+						}`}
+					>
+						{showStarter && (
+							<div className="w-full flex justify-center">
+								<div className="flex flex-col items-center p-4 w-4/5 md:max-w-1/2 sm:max-w-4/5">
+									<WelcomeBanner />
+								</div>
 							</div>
-						</div>
-					)}
-					<div>
-						<AIInput
-							thinkingMode={thinkingMode}
-							onThinkingModeChange={(value) => setThinkingMode(value)}
-							searchMode={searchMode}
-							onSearchModeChange={(value: SetStateAction<string>) =>
-								setSearchMode(value)
-							}
-							onInputChange={(value) => setInputValue(value)}
-							onEndpointChange={setApiEndpoint}
-							activeReference={activeReference}
-							onClearReference={() => setActiveReference(null)}
-							loading={isSending}
-							onSubmit={async (value) => {
-								if (!value.trim() || isSending) return;
-								setIsSending(true);
-
-								let finalValue = value.trim();
-								if (activeReference) {
-									finalValue = `${activeReference}, ${finalValue}`;
-									setActiveReference(null);
+						)}
+						<div>
+							<AIInput
+								thinkingMode={thinkingMode}
+								onThinkingModeChange={(value) => setThinkingMode(value)}
+								searchMode={searchMode}
+								onSearchModeChange={(value: SetStateAction<string>) =>
+									setSearchMode(value)
 								}
+								onInputChange={(value) => setInputValue(value)}
+								onEndpointChange={setApiEndpoint}
+								activeReference={activeReference}
+								onClearReference={() => setActiveReference(null)}
+								loading={isSending}
+								onSubmit={async (value) => {
+									if (!value.trim() || isSending) return;
+									setIsSending(true);
 
-								setShowStarter(false);
-								setIsChatboxCentered(false);
-
-								addMessageToChat(
-									"user",
-									finalValue,
-									"bg-muted/50 dark:bg-muted/50 text-sm",
-								);
-
-								ensureSearchLoaderStyles();
-								const botMessage = addbot(
-									getSearchLoaderHTML(t("chat.searching")),
-									"text-sm",
-								);
-
-								try {
-									const fetchChat = async () => {
-										if (finalValue.toLowerCase() === "test") {
-											return fetch("/mdtest.md");
-										}
-										return fetch("/api/chat", {
-											method: "POST",
-											headers: {
-												"Content-Type": "application/json",
-											},
-											body: JSON.stringify({
-												messages: [{ role: "user", content: finalValue }],
-												history: chatHistory,
-											}),
-										});
-									};
-
-									// Add user message to history
-									setChatHistory((prev) => [...prev, ["user", finalValue]]);
-
-									const response = await fetchChat();
-
-									if (!response.ok) throw new Error("Failed to fetch response");
-
-									if (botMessage) {
-										botMessage.remove();
+									let finalValue = value.trim();
+									if (activeReference) {
+										finalValue = `${activeReference}, ${finalValue}`;
+										setActiveReference(null);
 									}
 
-									const messageDiv = addMessageToChat(
-										"bot",
-										"",
+									setShowStarter(false);
+									setIsChatboxCentered(false);
+
+									addMessageToChat(
+										"user",
+										finalValue,
+										"bg-muted/50 dark:bg-muted/50 text-sm",
+									);
+
+									const pipelineSteps = buildPipelineSteps(t);
+									const botMessage = addbot(
+										getPipelineLoaderHTML(pipelineSteps[0].label),
 										"text-sm",
-										true,
 									);
+									const pipelineLoader = startPipelineLoader(botMessage, {
+										steps: pipelineSteps,
+									});
 
-									const streamContainer =
-										messageDiv?.querySelector("#stream-container");
-									if (!streamContainer)
-										throw new Error("Failed to create stream container");
-
-									// Try real streaming; fall back to simulated streaming on failure
-									const streamResult = await streamFromReader(
-										response,
-										streamContainer as HTMLElement,
-									);
-
-									let data: string;
-									if (streamResult.success) {
-										data = streamResult.text;
-									} else {
-										// Revert to fake streaming illusion
-										data = streamResult.text;
-										if (!data) {
-											try {
-												data = await response.text();
-											} catch {
-												data = "Error: Failed to read response";
+									try {
+										const fetchChat = async () => {
+											if (finalValue.toLowerCase() === "test") {
+												return fetch("/mdtest.md");
 											}
+											return fetch("/api/chat", {
+												method: "POST",
+												headers: {
+													"Content-Type": "application/json",
+												},
+												body: JSON.stringify({
+													messages: [{ role: "user", content: finalValue }],
+													history: chatHistory,
+												}),
+											});
+										};
+
+										// Add user message to history
+										setChatHistory((prev) => [...prev, ["user", finalValue]]);
+
+										const response = await fetchChat();
+
+										if (!response.ok)
+											throw new Error("Failed to fetch response");
+
+										await pipelineLoader.dismiss();
+										if (botMessage) {
+											botMessage.remove();
 										}
-										(streamContainer as HTMLElement).innerHTML = "";
-										await streamText(
-											data,
-											streamContainer as HTMLElement,
-											isDev ? 90 : 60,
+
+										const messageDiv = addMessageToChat(
+											"bot",
+											"",
+											"text-sm",
+											true,
 										);
-									}
 
-									// Add bot response to history
-									setChatHistory((prev) => [...prev, ["bot", data]]);
+										const streamContainer =
+											messageDiv?.querySelector("#stream-container");
+										if (!streamContainer)
+											throw new Error("Failed to create stream container");
 
-									if (messageDiv) {
-										const feedbackDiv = document.createElement("div");
-										feedbackDiv.className = "ml-4 mb-2";
-										const feedbackContent = `
+										// Try real streaming; fall back to simulated streaming on failure
+										const streamResult = await streamFromReader(
+											response,
+											streamContainer as HTMLElement,
+										);
+
+										let data: string;
+										if (streamResult.success) {
+											data = streamResult.text;
+										} else {
+											// Revert to fake streaming illusion
+											data = streamResult.text;
+											if (!data) {
+												try {
+													data = await response.text();
+												} catch {
+													data = "Error: Failed to read response";
+												}
+											}
+											(streamContainer as HTMLElement).innerHTML = "";
+											await streamText(
+												data,
+												streamContainer as HTMLElement,
+												isDev ? 90 : 60,
+											);
+										}
+
+										// Add bot response to history
+										setChatHistory((prev) => [...prev, ["bot", data]]);
+
+										if (messageDiv) {
+											const feedbackDiv = document.createElement("div");
+											feedbackDiv.className = "ml-4 mb-2";
+											const feedbackContent = `
                     <div class="flex items-center gap-2 text-left">
                       <span class="text-sm text-muted-foreground">${t("chat.feedbackQuestion")}</span>
                       <button class="feedback-yes px-2 py-1 text-sm rounded-md bg-secondary/50 hover:bg-secondary">${t("chat.feedbackYes")}</button>
                       <button class="feedback-no px-2 py-1 text-sm rounded-md bg-secondary/50 transition-all duration-300 hover:bg-red-600 hover:text-white">${t("chat.feedbackNo")}</button>
                     </div>
                   `;
-										feedbackDiv.innerHTML = feedbackContent;
+											feedbackDiv.innerHTML = feedbackContent;
 
-										const yesButton =
-											feedbackDiv.querySelector(".feedback-yes");
-										const noButton = feedbackDiv.querySelector(".feedback-no");
+											const yesButton =
+												feedbackDiv.querySelector(".feedback-yes");
+											const noButton =
+												feedbackDiv.querySelector(".feedback-no");
 
-										yesButton?.addEventListener("click", () => {
-											handleFeedback(finalValue, data, "helpful");
-											feedbackDiv.innerHTML = `<span class="text-sm text-muted-foreground">${t("chat.feedbackThanks")}</span>`;
-										});
+											yesButton?.addEventListener("click", () => {
+												handleFeedback(finalValue, data, "helpful");
+												feedbackDiv.innerHTML = `<span class="text-sm text-muted-foreground">${t("chat.feedbackThanks")}</span>`;
+											});
 
-										noButton?.addEventListener("click", () => {
-											feedbackDiv.innerHTML = `
+											noButton?.addEventListener("click", () => {
+												feedbackDiv.innerHTML = `
                       <div class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
                         <div class="fixed inset-0 flex items-center justify-center">
                           <div class="dialog bg-background border shadow-lg rounded-lg w-[90%] max-w-md p-6">
@@ -551,110 +508,113 @@ export default function App() {
                       </div>
                     `;
 
-											const optionButtons =
-												feedbackDiv.querySelectorAll(".reason-btn");
-											const customReason = feedbackDiv.querySelector(
-												"#custom-reason",
-											) as HTMLTextAreaElement;
-											const submitBtn =
-												feedbackDiv.querySelector("#submit-feedback");
-											const cancelBtn =
-												feedbackDiv.querySelector("#cancel-feedback");
+												const optionButtons =
+													feedbackDiv.querySelectorAll(".reason-btn");
+												const customReason = feedbackDiv.querySelector(
+													"#custom-reason",
+												) as HTMLTextAreaElement;
+												const submitBtn =
+													feedbackDiv.querySelector("#submit-feedback");
+												const cancelBtn =
+													feedbackDiv.querySelector("#cancel-feedback");
 
-											let selectedReason: string | null = null;
+												let selectedReason: string | null = null;
 
-											optionButtons.forEach((btn) => {
-												btn.addEventListener("click", () => {
-													selectedReason =
-														(btn as HTMLElement).dataset.reason || null;
+												optionButtons.forEach((btn) => {
+													btn.addEventListener("click", () => {
+														selectedReason =
+															(btn as HTMLElement).dataset.reason || null;
 
-													optionButtons.forEach((b) =>
-														b.classList.remove("bg-secondary", "text-white"),
-													);
-													btn.classList.add("bg-secondary", "text-black");
+														optionButtons.forEach((b) =>
+															b.classList.remove("bg-secondary", "text-white"),
+														);
+														btn.classList.add("bg-secondary", "text-black");
 
-													if (selectedReason === "other") {
-														customReason.classList.remove("hidden");
-													} else {
-														customReason.classList.add("hidden");
+														if (selectedReason === "other") {
+															customReason.classList.remove("hidden");
+														} else {
+															customReason.classList.add("hidden");
+														}
+													});
+												});
+
+												submitBtn?.addEventListener("click", () => {
+													if (!selectedReason) return;
+
+													let reasonToSend =
+														selectedReason === "other"
+															? customReason.value.trim()
+															: selectedReason;
+
+													if (selectedReason === "other" && !reasonToSend) {
+														customReason.classList.add("border-destructive");
+														customReason.placeholder = t(
+															"chat.feedbackCustomRequired",
+														);
+														return;
 													}
+
+													handleFeedback(finalValue, data, reasonToSend);
+													feedbackDiv.innerHTML = `<span class="text-sm text-muted-foreground">${t("chat.feedbackThanks")}</span>`;
+												});
+
+												cancelBtn?.addEventListener("click", () => {
+													feedbackDiv.innerHTML = `<span class="text-sm text-muted-foreground">${t("chat.feedbackCanceled")}</span>`;
 												});
 											});
 
-											submitBtn?.addEventListener("click", () => {
-												if (!selectedReason) return;
-
-												let reasonToSend =
-													selectedReason === "other"
-														? customReason.value.trim()
-														: selectedReason;
-
-												if (selectedReason === "other" && !reasonToSend) {
-													customReason.classList.add("border-destructive");
-													customReason.placeholder = t(
-														"chat.feedbackCustomRequired",
-													);
-													return;
-												}
-
-												handleFeedback(finalValue, data, reasonToSend);
-												feedbackDiv.innerHTML = `<span class="text-sm text-muted-foreground">${t("chat.feedbackThanks")}</span>`;
-											});
-
-											cancelBtn?.addEventListener("click", () => {
-												feedbackDiv.innerHTML = `<span class="text-sm text-muted-foreground">${t("chat.feedbackCanceled")}</span>`;
-											});
-										});
-
-										messageDiv.appendChild(feedbackDiv);
-									}
-								} catch (error) {
-									if (botMessage) {
-										botMessage.remove();
-									}
-									addMessageToChat(
-										"bot",
-										`Error: ${error instanceof Error ? error.message : "An unknown error occurred"}`,
-										"bg-destructive/10 dark:bg-destructive/20",
-									);
-								} finally {
-									setIsSending(false);
-								}
-							}}
-						/>
-						{isChatboxCentered && (
-							<div
-								className={`transition-all duration-300 ${inputValue ? "opacity-0 max-h-0 overflow-hidden" : "opacity-100 max-h-96"}`}
-							>
-								<PromptRecs
-									onPromptSelect={(prompt) => {
-										const aiInput = document.getElementById(
-											"ai-input",
-										) as HTMLTextAreaElement;
-										if (aiInput) {
-											aiInput.value = prompt;
-											const inputEvent = new Event("input", { bubbles: true });
-											aiInput.dispatchEvent(inputEvent);
-											const enterEvent = new KeyboardEvent("keydown", {
-												key: "Enter",
-												code: "Enter",
-												bubbles: true,
-												cancelable: true,
-												shiftKey: false,
-											});
-											aiInput.dispatchEvent(enterEvent);
+											messageDiv.appendChild(feedbackDiv);
 										}
-									}}
-								/>
-							</div>
+									} catch (error) {
+										await pipelineLoader.dismiss();
+										if (botMessage) {
+											botMessage.remove();
+										}
+										addMessageToChat(
+											"bot",
+											`Error: ${error instanceof Error ? error.message : "An unknown error occurred"}`,
+											"bg-destructive/10 dark:bg-destructive/20",
+										);
+									} finally {
+										setIsSending(false);
+									}
+								}}
+							/>
+							{isChatboxCentered && (
+								<div
+									className={`transition-all duration-300 ${inputValue ? "opacity-0 max-h-0 overflow-hidden" : "opacity-100 max-h-96"}`}
+								>
+									<PromptRecs
+										onPromptSelect={(prompt) => {
+											const aiInput = document.getElementById(
+												"ai-input",
+											) as HTMLTextAreaElement;
+											if (aiInput) {
+												aiInput.value = prompt;
+												const inputEvent = new Event("input", {
+													bubbles: true,
+												});
+												aiInput.dispatchEvent(inputEvent);
+												const enterEvent = new KeyboardEvent("keydown", {
+													key: "Enter",
+													code: "Enter",
+													bubbles: true,
+													cancelable: true,
+													shiftKey: false,
+												});
+												aiInput.dispatchEvent(enterEvent);
+											}
+										}}
+									/>
+								</div>
+							)}
+						</div>
+						{!isChatboxCentered && (
+							<p className="text-center text-[11px]/3 pb-1 sm:py-0 sm:leading-1 leading-3 tracking-tight text-muted-foreground drop-shadow-background drop-shadow-xl">
+								{t("chat.disclaimer")}
+							</p>
 						)}
 					</div>
-					{!isChatboxCentered && (
-						<p className="text-center text-[11px]/3 pb-1 sm:py-0 sm:leading-1 leading-3 tracking-tight text-muted-foreground drop-shadow-background drop-shadow-xl">
-							{t("chat.disclaimer")}
-						</p>
-					)}
-				</div>
 				)}
 			</div>
 		</>

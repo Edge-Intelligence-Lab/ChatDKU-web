@@ -11,6 +11,15 @@ import { PromptRecs } from "@/components/prompt_recs";
 import WelcomeBanner from "@/components/WelcomeBanner";
 import Side from "@/components/side";
 import { useLanguage } from "@/components/language-provider";
+import {
+	DEFAULT_PIPELINE_STEP_IDS,
+	getPipelineLoaderHTML,
+	startPipelineLoader,
+	type PipelineStep,
+} from "@/lib/pipelineLoader";
+import type { DictionaryKey } from "@/lib/i18n";
+
+const DEV_ARTIFICIAL_DELAY_MS = 40000;
 
 const configureMarked = () => {
 	marked.setOptions({
@@ -31,69 +40,13 @@ const parseMarkdown = (content: string): string => {
 		: cleanedContent;
 };
 
-const ensureSearchLoaderStyles = () => {
-	if (typeof document === "undefined") return;
-	if (document.getElementById("search-loader-style")) return;
-	const style = document.createElement("style");
-	style.id = "search-loader-style";
-	style.innerHTML = `
-    @keyframes iconCycle {
-      0% { opacity: 0; transform: scale(0.92) translateY(2px) rotate(-2deg); }
-      12% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
-      28% { opacity: 1; transform: scale(1.02) translateY(0) rotate(0.5deg); }
-      40% { opacity: 0; transform: scale(0.98) translateY(-1px) rotate(2deg); }
-      100% { opacity: 0; }
-    }
-    @keyframes dotPulse {
-      0%, 20% { opacity: 0.2; }
-      50% { opacity: 1; }
-      80%, 100% { opacity: 0.2; }
-    }
-    .cdku-loader .icon-cycle { animation: iconCycle 2400ms linear infinite; }
-    .cdku-loader .icon-1 { animation-delay: 0ms; }
-    .cdku-loader .icon-2 { animation-delay: 480ms; }
-    .cdku-loader .icon-3 { animation-delay: 960ms; }
-    .cdku-loader .icon-4 { animation-delay: 1440ms; }
-    .cdku-loader .icon-5 { animation-delay: 1920ms; }
-    .cdku-loader .dot { width: 3px; height: 3px; border-radius: 9999px; background-color: currentColor; display: inline-block; margin-left: 3px; opacity: 0.2; animation: dotPulse 1200ms ease-in-out infinite; }
-    .cdku-loader .dot:nth-child(2) { animation-delay: 150ms; }
-    .cdku-loader .dot:nth-child(3) { animation-delay: 300ms; }
-  `;
-	document.head.appendChild(style);
-};
-
-const getSearchLoaderHTML = (searchingText: string): string => {
-	const search =
-		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="absolute inset-0 icon-cycle icon-1"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>';
-	const fileSearch =
-		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="absolute inset-0 icon-cycle icon-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="11.5" cy="14.5" r="2.5"/><path d="m13.3 16.3 1.7 1.7"/></svg>';
-	const compass =
-		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="absolute inset-0 icon-cycle icon-3"><circle cx="12" cy="12" r="10"/><path d="m16 8-4 8-4-4 8-4Z"/></svg>';
-	const radar =
-		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="absolute inset-0 icon-cycle icon-4"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M22 12a10 10 0 1 1-10-10"/><path d="M14.31 8.69 21 2"/><circle cx="12" cy="12" r="0.5"/></svg>';
-	const sparkles =
-		'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="absolute inset-0 icon-cycle icon-5"><path d="M12 3l1.9 3.9L18 9l-4.1 2.1L12 15l-1.9-3.9L6 9l4.1-2.1Z"/><path d="M20 17l.95 1.95L23 20l-1.95.95L20 23l-.95-2.05L17 20l2.05-.95Z"/><path d="M4 17l.95 1.95L7 20l-1.95.95L4 23l-.95-2.05L1 20l2.05-.95Z"/></svg>';
-
-	return `
-    <div class="cdku-loader flex items-center gap-2 sm:gap-2.5 text-foreground/80">
-      <div class="relative inline-flex items-center justify-center align-middle" style="width:1em;height:1em;">
-        ${search}
-        ${fileSearch}
-        ${compass}
-        ${radar}
-        ${sparkles}
-      </div>
-      <div class="text-xs sm:text-sm leading-none tracking-tight">
-        <span class="opacity-80">${searchingText}</span>
-        <span class="ml-1 inline-flex align-middle">
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
-        </span>
-      </div>
-    </div>
-  `;
-};
+const buildPipelineSteps = (
+	t: (key: DictionaryKey) => string,
+): PipelineStep[] =>
+	DEFAULT_PIPELINE_STEP_IDS.map((id) => ({
+		id,
+		label: t(`chat.step.${id}` as DictionaryKey),
+	}));
 
 const streamFromReader = async (
 	response: Response,
@@ -261,10 +214,11 @@ export default function Dev() {
 				messageElement.innerHTML = `
         <div class="flex flex-col ${isUser ? (isDev ? "items-end max-w-[85%] sm:max-w-[80%]" : "items-end max-w-[95%] sm:max-w-[85%]") : "items-start w-full sm:max-w-[85%]"}">
           <div class="flex flex-col ${isUser ? "lg:flex-row-reverse" : "lg:flex-row"} gap-3 px-4 py-2 ${className} rounded-3xl w-full overflow-hidden">
-            ${isUser
-						? ""
-						: '<div class="flex-shrink-0"><div class="w-8 h-8 rounded-full bg-transparent flex items-center justify-center"><img src="/logos/new_logo.svg" class="block dark:hidden p-1.5" alt="Logo"/><img src="/logos/new_logo.svg" class="hidden dark:block p-1.5" alt="Logo"/></div></div>'
-					}
+            ${
+							isUser
+								? ""
+								: '<div class="flex-shrink-0"><div class="w-8 h-8 rounded-full bg-transparent flex items-center justify-center"><img src="/logos/new_logo.svg" class="block dark:hidden p-1.5" alt="Logo"/><img src="/logos/new_logo.svg" class="hidden dark:block p-1.5" alt="Logo"/></div></div>'
+						}
             <div class="${isUser ? "text-right" : "text-left"} overflow-hidden">
               <div class="text-foreground break-words overflow-wrap-anywhere markdown-content ${!isUser ? "text-[0.9375rem]" : ""}">${sanitizedContent}</div>
             </div>
@@ -334,7 +288,7 @@ export default function Dev() {
 						chatLog.innerHTML = "";
 					}
 				}}
-				onConversationSelect={() => { }}
+				onConversationSelect={() => {}}
 			/>
 			<div className="flex flex-col min-h-screen relative selection:bg-zinc-800 selection:text-white dark:selection:bg-white dark:selection:text-black">
 				<header className="sticky top-0 z-20 w-full">
@@ -349,10 +303,11 @@ export default function Dev() {
 				</main>
 
 				<div
-					className={`w-full max-w-[95vw] p-2 pt-0 transition-all duration-300 ${isChatboxCentered
+					className={`w-full max-w-[95vw] p-2 pt-0 transition-all duration-300 ${
+						isChatboxCentered
 							? "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
 							: "fixed bottom-0 left-1/2 -translate-x-1/2 rounded-t-3xl backdrop-blur-md md:backdrop-blur-none z-10"
-						}`}
+					}`}
 				>
 					{showStarter && (
 						<div className="w-full flex justify-center">
@@ -383,8 +338,14 @@ export default function Dev() {
 									"bg-muted/50 dark:bg-muted/50 text-sm",
 								);
 
-								ensureSearchLoaderStyles();
-								const botMessage = addbot(getSearchLoaderHTML(t("chat.searching")), "text-sm");
+								const pipelineSteps = buildPipelineSteps(t);
+								const botMessage = addbot(
+									getPipelineLoaderHTML(pipelineSteps[0].label),
+									"text-sm",
+								);
+								const pipelineLoader = startPipelineLoader(botMessage, {
+									steps: pipelineSteps,
+								});
 
 								try {
 									const fetchChat = async () => {
@@ -406,10 +367,16 @@ export default function Dev() {
 									// Add user message to history
 									setChatHistory((prev) => [...prev, ["user", value.trim()]]);
 
-									const response = await fetchChat();
+									// In dev, responses are usually instant (static md or local mock).
+									// Stall briefly so the pipeline loader is actually visible.
+									const [response] = await Promise.all([
+										fetchChat(),
+										new Promise((r) => setTimeout(r, DEV_ARTIFICIAL_DELAY_MS)),
+									]);
 
 									if (!response.ok) throw new Error("Failed to fetch response");
 
+									await pipelineLoader.dismiss();
 									if (botMessage) {
 										botMessage.remove();
 									}
@@ -472,8 +439,7 @@ export default function Dev() {
 
 										yesButton?.addEventListener("click", () => {
 											handleFeedback(value, data, "helpful");
-											feedbackDiv.innerHTML =
-												`<span class="text-sm text-muted-foreground">${t("chat.feedbackThanks")}</span>`;
+											feedbackDiv.innerHTML = `<span class="text-sm text-muted-foreground">${t("chat.feedbackThanks")}</span>`;
 										});
 
 										noButton?.addEventListener("click", () => {
@@ -538,7 +504,9 @@ export default function Dev() {
 
 												if (selectedReason === "other" && !reasonToSend) {
 													customReason.classList.add("border-destructive");
-													customReason.placeholder = t("chat.feedbackCustomRequired");
+													customReason.placeholder = t(
+														"chat.feedbackCustomRequired",
+													);
 													return;
 												}
 
@@ -554,6 +522,7 @@ export default function Dev() {
 										messageDiv.appendChild(feedbackDiv);
 									}
 								} catch (error) {
+									await pipelineLoader.dismiss();
 									if (botMessage) {
 										botMessage.remove();
 									}
