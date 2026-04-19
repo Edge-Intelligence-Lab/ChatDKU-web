@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { useMediaQuery } from "@/components/hooks/use-media-query";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -18,7 +18,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { BrainCircuit, ChevronsUpDown } from "lucide-react";
-import { getStoredEndpoint, setStoredEndpoint } from "@/lib/convosNew";
+import { getStoredEndpoint, setStoredEndpoint } from "@/lib/convos";
 
 type Branch = {
   chatEndpoint: string;

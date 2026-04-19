@@ -8,7 +8,7 @@ import {
   getStoredEndpoint,
   setStoredEndpoint,
   clearStoredEndpoint,
-} from "./convosNew";
+} from "./convos";
 
 // Mock fetch
 global.fetch = jest.fn();
@@ -41,7 +41,7 @@ Object.defineProperty(global.window, "localStorage", {
   writable: true,
 });
 
-describe("convosNew", () => {
+describe("convos", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     document.cookie = "";

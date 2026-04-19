@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, SetStateAction } from "react";
 import { marked } from "marked";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import { getStoredEndpoint } from "@/lib/convosNew";
+import { getStoredEndpoint } from "@/lib/convos";
 import { AIInput } from "@/components/ui/ai-input";
 import { Navbar } from "@/components/navbar";
 import { PromptRecs } from "@/components/prompt_recs";

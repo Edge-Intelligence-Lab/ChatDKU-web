@@ -36,7 +36,7 @@ import {
 	getConversations,
 	getSessionMessages,
 	deleteConversation,
-} from "@/lib/convosNew";
+} from "@/lib/convos";
 import { Input } from "./ui/input";
 
 import { cn } from "@/lib/utils";
