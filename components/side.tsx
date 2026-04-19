@@ -39,7 +39,7 @@ import {
 } from "@/lib/convosNew";
 import { Input } from "./ui/input";
 
-import { cn } from "@/components/utils";
+import { cn } from "@/lib/utils";
 
 import {
 	Dialog,

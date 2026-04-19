@@ -2,7 +2,7 @@
 
 import { CornerRightUp, Loader2, X } from "lucide-react";
 import { useState, useEffect } from "react";
-import { cn } from "@/components/utils";
+import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { useAutoResizeTextarea } from "@/components/hooks/use-auto-resize-textarea";
 import { useLanguage } from "@/components/language-provider";
