@@ -44,6 +44,113 @@ const parseMarkdown = (content: string): string => {
 		: cleanedContent;
 };
 
+const parseThinkingStream = (text: string): { thinking: string; response: string } => {
+	const lines = text.split("\n");
+	const thinkingLines: string[] = [];
+	let responseStart = -1;
+	for (let i = 0; i < lines.length; i++) {
+		if (lines[i].startsWith("[THINKING]:")) {
+			thinkingLines.push(lines[i].slice("[THINKING]:".length));
+		} else {
+			responseStart = i;
+			break;
+		}
+	}
+	const response =
+		responseStart >= 0 ? lines.slice(responseStart).join("\n").trimStart() : "";
+	return { thinking: thinkingLines.join("\n"), response };
+};
+
+const ensureThinkingBoxStyles = () => {
+	if (typeof document === "undefined") return;
+	if (document.getElementById("thinking-box-style")) return;
+	const style = document.createElement("style");
+	style.id = "thinking-box-style";
+	style.innerHTML = `
+    .cdku-thinking-box {
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 240ms ease-out, transform 240ms ease-out;
+    }
+    .cdku-thinking-box.tb-entered {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .cdku-thinking-box.tb-dismissing {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    @keyframes tbCursorPulse {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 0.8; }
+    }
+    .cdku-thinking-cursor {
+      display: inline-block;
+      width: 1px;
+      height: 0.8em;
+      background-color: currentColor;
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: tbCursorPulse 1000ms ease-in-out infinite;
+    }
+  `;
+	document.head.appendChild(style);
+};
+
+const createThinkingBox = (
+	chatLog: HTMLElement,
+): { updateContent: (content: string) => void; dismiss: () => Promise<void> } => {
+	ensureThinkingBoxStyles();
+	const outerWrapper = document.createElement("div");
+	outerWrapper.className = "flex w-full";
+	outerWrapper.innerHTML = `
+    <div class="flex flex-col items-start w-full sm:max-w-[85%]">
+      <div class="cdku-thinking-box flex flex-col lg:flex-row gap-3 px-4 py-2 w-full">
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 rounded-full bg-transparent flex items-center justify-center">
+            <img src="/logos/new_logo.svg" class="p-1.5 opacity-60" alt="ChatDKU"/>
+          </div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="tb-scroll h-[120px] overflow-hidden rounded-xl px-3 py-2.5 select-none" style="background:color-mix(in srgb,var(--muted) 20%,transparent);border:1px solid color-mix(in srgb,var(--border) 30%,transparent)">
+            <p class="tb-text font-mono text-[11px] leading-relaxed whitespace-pre-wrap break-words m-0 pointer-events-none" style="color:color-mix(in srgb,var(--muted-foreground) 55%,transparent)"><span class="cdku-thinking-cursor"></span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+	chatLog.appendChild(outerWrapper);
+	chatLog.scrollTo(0, chatLog.scrollHeight);
+
+	const thinkingBox = outerWrapper.querySelector(".cdku-thinking-box") as HTMLElement;
+	const textEl = outerWrapper.querySelector(".tb-text") as HTMLElement;
+	const scrollEl = outerWrapper.querySelector(".tb-scroll") as HTMLElement;
+
+	requestAnimationFrame(() => {
+		requestAnimationFrame(() => {
+			thinkingBox.classList.add("tb-entered");
+		});
+	});
+
+	return {
+		updateContent: (content: string) => {
+			textEl.innerHTML = "";
+			textEl.appendChild(document.createTextNode(content));
+			const cursor = document.createElement("span");
+			cursor.className = "cdku-thinking-cursor";
+			textEl.appendChild(cursor);
+			scrollEl.scrollTop = scrollEl.scrollHeight;
+			chatLog.scrollTo(0, chatLog.scrollHeight);
+		},
+		dismiss: async () => {
+			thinkingBox.classList.remove("tb-entered");
+			thinkingBox.classList.add("tb-dismissing");
+			await new Promise((r) => setTimeout(r, 260));
+			outerWrapper.remove();
+		},
+	};
+};
+
 // Inject styles for the fancy AI loader once per document
 const ensureSearchLoaderStyles = () => {
 	if (typeof document === "undefined") return;
@@ -113,12 +220,17 @@ const getSearchLoaderHTML = (): string => {
 const streamFromReader = async (
 	response: Response,
 	elementContainer: HTMLElement,
+	options?: {
+		onThinkingContent?: (content: string) => void;
+		onResponseStart?: () => void;
+	},
 ): Promise<{ success: boolean; text: string }> => {
 	if (!response.body) {
 		return { success: false, text: "" };
 	}
 
 	let accumulated = "";
+	let responseStartNotified = false;
 	try {
 		const reader = response.body.getReader();
 		const decoder = new TextDecoder();
@@ -131,6 +243,25 @@ const streamFromReader = async (
 			"text-foreground break-words overflow-wrap-anywhere markdown-content text-[0.9375rem]";
 		elementContainer.appendChild(contentDiv);
 
+		const renderChunk = () => {
+			if (options) {
+				const { thinking, response: responseText } = parseThinkingStream(accumulated);
+				if (thinking) options.onThinkingContent?.(thinking);
+				if (responseText && !responseStartNotified) {
+					responseStartNotified = true;
+					options.onResponseStart?.();
+				}
+				const textToRender = responseText || (!thinking ? accumulated : "");
+				if (textToRender) {
+					const cleaned = textToRender.replace(/<think>[\s\S]*?<\/think>/gi, "");
+					contentDiv.innerHTML = parseMarkdown(cleaned);
+				}
+			} else {
+				const cleaned = accumulated.replace(/<think>[\s\S]*?<\/think>/gi, "");
+				contentDiv.innerHTML = parseMarkdown(cleaned);
+			}
+		};
+
 		while (true) {
 			const { done, value } = await reader.read();
 			if (done) break;
@@ -141,16 +272,14 @@ const streamFromReader = async (
 			}
 
 			accumulated += decoder.decode(value, { stream: true });
-			const cleaned = accumulated.replace(/<think>[\s\S]*?<\/think>/gi, "");
-			contentDiv.innerHTML = parseMarkdown(cleaned);
+			renderChunk();
 
 			const chatLog = document.getElementById("chat-log");
 			chatLog?.scrollTo(0, chatLog.scrollHeight);
 		}
 
 		accumulated += decoder.decode();
-		const cleaned = accumulated.replace(/<think>[\s\S]*?<\/think>/gi, "");
-		contentDiv.innerHTML = parseMarkdown(cleaned);
+		renderChunk();
 
 		return { success: true, text: accumulated };
 	} catch (error) {
@@ -635,10 +764,34 @@ export default function ChatPage({ isDev = false }: ChatPageProps) {
 									if (!streamContainer)
 										throw new Error("Failed to create stream container");
 
+									const thinkingChatLog = document.getElementById("chat-log");
+									let thinkingBox: ReturnType<typeof createThinkingBox> | null = null;
+
 									const streamResult = await streamFromReader(
 										response,
 										streamContainer as HTMLElement,
+										{
+											onThinkingContent: (content) => {
+												if (!thinkingBox && thinkingChatLog) {
+													thinkingBox = createThinkingBox(thinkingChatLog);
+												}
+												thinkingBox?.updateContent(content);
+											},
+											onResponseStart: () => {
+												if (thinkingBox) {
+													const box = thinkingBox;
+													thinkingBox = null;
+													void box.dismiss();
+												}
+											},
+										},
 									);
+
+									const pendingBox = thinkingBox;
+									if (pendingBox) {
+										thinkingBox = null;
+										await pendingBox.dismiss();
+									}
 
 									let data: string;
 									if (streamResult.success) {
