@@ -21,9 +21,6 @@ import {
 	Smartphone,
 	BarChart3,
 	RefreshCw,
-	FileText,
-	Globe,
-	MapPin,
 	Layers,
 	ArrowUpRight,
 } from "lucide-react";
@@ -82,20 +79,49 @@ export default function IntroPage() {
 			document.body.appendChild(tag);
 		}
 
-		let player: any;
+		interface YTPlayer {
+			mute(): void;
+			playVideo(): void;
+			seekTo(seconds: number, allowSeekAhead: boolean): void;
+			getCurrentTime(): number;
+			destroy(): void;
+		}
+		interface YTEvent {
+			target: YTPlayer;
+			data: number;
+		}
+		interface YTApi {
+			Player: new (
+				el: HTMLIFrameElement,
+				opts: {
+					events: {
+						onReady: (e: YTEvent) => void;
+						onStateChange: (e: YTEvent) => void;
+					};
+				},
+			) => YTPlayer;
+			PlayerState: { ENDED: number };
+		}
+		type YTWindow = Window & {
+			YT?: YTApi;
+			onYouTubeIframeAPIReady?: () => void;
+		};
+
+		let player: YTPlayer | undefined;
 		let interval: ReturnType<typeof setInterval> | null = null;
 		const END_SECONDS = 112;
+		const w = window as YTWindow;
 
 		const createPlayer = () => {
-			const YT = (window as any).YT;
+			const YT = w.YT;
 			if (!YT || !YT.Player || !iframeRef.current) return;
 			player = new YT.Player(iframeRef.current, {
 				events: {
-					onReady: (e: any) => {
+					onReady: (e) => {
 						e.target.mute();
 						e.target.playVideo();
 					},
-					onStateChange: (e: any) => {
+					onStateChange: (e) => {
 						if (e.data === YT.PlayerState.ENDED) {
 							e.target.seekTo(0, true);
 							e.target.playVideo();
@@ -112,11 +138,11 @@ export default function IntroPage() {
 			}, 250);
 		};
 
-		if ((window as any).YT && (window as any).YT.Player) {
+		if (w.YT && w.YT.Player) {
 			createPlayer();
 		} else {
-			const prev = (window as any).onYouTubeIframeAPIReady;
-			(window as any).onYouTubeIframeAPIReady = () => {
+			const prev = w.onYouTubeIframeAPIReady;
+			w.onYouTubeIframeAPIReady = () => {
 				if (typeof prev === "function") prev();
 				createPlayer();
 			};
@@ -490,7 +516,7 @@ export default function IntroPage() {
 								icon: Brain,
 								desc: t("home.agent.step5.desc"),
 							},
-						].map(({ step, label, icon: Icon, desc }, i) => (
+						].map(({ step, label, desc }, i) => (
 							<div key={step} className="flex md:flex-col items-center flex-1">
 								<div className="flex md:flex-col items-center md:items-center gap-3 md:gap-2 flex-1 md:text-center">
 									<div className="flex-shrink-0 w-10 h-10 rounded-full bg-foreground text-background flex items-center justify-center font-bold text-sm">

@@ -26,6 +26,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 	useEffect(() => {
 		const saved = Cookies.get("chatdku_lang") as Language | undefined;
 		if (saved && (saved === "en" || saved === "zh")) {
+			// eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate from cookie on mount
 			setLanguageState(saved);
 		}
 	}, []);

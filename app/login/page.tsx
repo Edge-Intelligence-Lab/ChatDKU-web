@@ -2,7 +2,7 @@
 import { TermsButton } from "@/components/about";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import Cookies from "js-cookie";

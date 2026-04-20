@@ -136,7 +136,7 @@ export default function Terms() {
                 <li>
                   <strong>Continuous Improvement:</strong> ChatDKU continuously
                   evolves based on user feedback and technological advancements.
-                  Users are invited to contribute to the platform's development
+                  Users are invited to contribute to the platform&apos;s development
                   through suggestions for improvements and additional resources.
                 </li>
                 <li>

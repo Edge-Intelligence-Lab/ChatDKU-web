@@ -1,5 +1,5 @@
 "use client";
-import { Home, MessageCircleQuestion, SquarePen } from "lucide-react";
+import { MessageCircleQuestion } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
 	NavigationMenu,

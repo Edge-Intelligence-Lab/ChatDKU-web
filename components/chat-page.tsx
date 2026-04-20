@@ -121,25 +121,28 @@ export function ChatPage({
 		scrollToBottom();
 	}, [messages, pipelineActive, scrollToBottom]);
 
-	const nextId = () => {
+	const nextId = useCallback(() => {
 		messageIdCounter.current += 1;
 		return `${instanceId}-${messageIdCounter.current}`;
-	};
+	}, [instanceId]);
 
-	const pushMessage = (msg: Omit<ChatMessageState, "id">) => {
-		const id = nextId();
-		setMessages((prev) => [...prev, { ...msg, id }]);
-		return id;
-	};
+	const pushMessage = useCallback(
+		(msg: Omit<ChatMessageState, "id">) => {
+			const id = nextId();
+			setMessages((prev) => [...prev, { ...msg, id }]);
+			return id;
+		},
+		[nextId],
+	);
 
-	const updateMessage = (
-		id: string,
-		patch: Partial<Omit<ChatMessageState, "id">>,
-	) => {
-		setMessages((prev) =>
-			prev.map((m) => (m.id === id ? { ...m, ...patch } : m)),
-		);
-	};
+	const updateMessage = useCallback(
+		(id: string, patch: Partial<Omit<ChatMessageState, "id">>) => {
+			setMessages((prev) =>
+				prev.map((m) => (m.id === id ? { ...m, ...patch } : m)),
+			);
+		},
+		[],
+	);
 
 	const sendFeedback = useCallback(
 		async (userInput: string, answer: string, reason: string) => {
@@ -252,6 +255,8 @@ export function ChatPage({
 			chatHistory,
 			artificialDelayMs,
 			resolvedChunkDelay,
+			pushMessage,
+			updateMessage,
 		],
 	);
 

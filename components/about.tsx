@@ -172,7 +172,7 @@ export function TermsButton() {
 							<strong>Continuous Improvement:</strong> ChatDKU
 							continuously evolves based on user feedback and
 							technological advancements. Users are invited to contribute
-							to the platform's development through suggestions for
+							to the platform&apos;s development through suggestions for
 							improvements and additional resources.
 						</li>
 						<li>

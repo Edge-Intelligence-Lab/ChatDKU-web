@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { BrainCircuit, ChevronsUpDown } from "lucide-react";
+import { BrainCircuit } from "lucide-react";
 import { getStoredEndpoint, setStoredEndpoint } from "@/lib/convos";
 
 type Branch = {

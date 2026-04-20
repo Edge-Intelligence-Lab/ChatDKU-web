@@ -10,21 +10,12 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-	DropdownMenuPortal,
-} from "@/components/ui/dropdown-menu";
-import {
 	Sheet,
 	SheetContent,
-	SheetDescription,
 	SheetHeader,
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet";
-import DynamicLogo from "./dynamic-logo";
 import { ComboBoxResponsive } from "./ui/combobox";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -33,7 +24,6 @@ import { useEffect, useRef, useState } from "react";
 
 import {
 	Convo,
-	getConversations,
 	getSessionMessages,
 	deleteConversation,
 } from "@/lib/convos";
@@ -83,21 +73,15 @@ export default function Side({
 	const [messagesIndex, setMessagesIndex] = useState<Record<string, string>>(
 		{},
 	);
-	const [filteredConversations, setFilteredConversations] = useState<Convo[]>(
-		[],
-	);
+	const [searchResults, setSearchResults] = useState<Convo[]>([]);
 	const [deleteId, setDeleteId] = useState<string | null>(null);
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-	const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 	const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 	const { t } = useLanguage();
 
-	// Keep filtered list in sync with base conversations when no search
-	useEffect(() => {
-		if (!searchQuery.trim()) {
-			setFilteredConversations(conversations);
-		}
-	}, [conversations, searchQuery]);
+	const filteredConversations = searchQuery.trim()
+		? searchResults
+		: conversations;
 
 	// Debounced search that matches title and message contents
 	useEffect(() => {
@@ -132,7 +116,7 @@ export default function Side({
 						for (const [id, text] of results) next[id] = text;
 						return next;
 					});
-				} catch (e) {
+				} catch {
 					// ignore fetch errors here; search will just rely on titles
 				}
 			}
@@ -145,7 +129,7 @@ export default function Side({
 
 			const byId: Record<string, Convo> = {};
 			[...titleMatches, ...contentMatches].forEach((c) => (byId[c.id] = c));
-			setFilteredConversations(Object.values(byId));
+			setSearchResults(Object.values(byId));
 		}, 250);
 
 		return () => {
@@ -153,6 +137,7 @@ export default function Side({
 		};
 	}, [searchQuery, conversations, messagesIndex]);
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars -- wired for a delete affordance not yet exposed
 	const openDeleteDialog = (id: string) => {
 		setDeleteId(id);
 		setIsDeleteOpen(true);

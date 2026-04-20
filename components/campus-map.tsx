@@ -94,6 +94,35 @@ const MapModal = ({
 	);
 };
 
+type MarkerType = "building" | "office" | "printer";
+
+function FilterButtons({
+	selectedType,
+	onSelect,
+}: {
+	selectedType: MarkerType;
+	onSelect: (type: MarkerType) => void;
+}) {
+	return (
+		<div className="flex flex-row md:flex-col gap-3 md:gap-4 justify-center md:justify-start mt-2 md:mt-6">
+			{(["building", "office", "printer"] as const).map((type) => (
+				<Button
+					key={type}
+					variant={selectedType === type ? "default" : "secondary"}
+					className="rounded-xl text-sm md:text-base px-3 md:px-4 py-1.5 md:py-2"
+					onClick={() => onSelect(type)}
+				>
+					{type === "building"
+						? "Buildings"
+						: type === "office"
+							? "Offices"
+							: "Printers"}
+				</Button>
+			))}
+		</div>
+	);
+}
+
 export default function CampusMap({
 	onAsk,
 }: {
@@ -127,6 +156,7 @@ export default function CampusMap({
 	}, [selectedType]);
 
 	useEffect(() => {
+		// eslint-disable-next-line react-hooks/set-state-in-effect -- switch to list view on mobile transitions
 		if (isMobile) setViewMode("list");
 	}, [isMobile]);
 
@@ -153,7 +183,13 @@ export default function CampusMap({
 	const filteredMarkers = markers;
 	const isBottomHalf = selectedMarker && selectedMarker.top > 350;
 
-	let finalListItems: any[] = [];
+	type ListItem = SubItem & {
+		markerId: number;
+		markerType: Marker["type"];
+		itemIndex: number;
+		id?: string;
+	};
+	let finalListItems: ListItem[] = [];
 
 	if (selectedType === "building" || selectedType === "printer") {
 		finalListItems = filteredMarkers.flatMap((marker) =>
@@ -197,34 +233,19 @@ export default function CampusMap({
 		}
 	};
 
-	const FilterButtons = () => (
-		<div className="flex flex-row md:flex-col gap-3 md:gap-4 justify-center md:justify-start mt-2 md:mt-6">
-			{(["building", "office", "printer"] as const).map((type) => (
-				<Button
-					key={type}
-					variant={selectedType === type ? "default" : "secondary"}
-					className="rounded-xl text-sm md:text-base px-3 md:px-4 py-1.5 md:py-2"
-					onClick={() => {
-						setSelectedType(type);
-						setSelectedMarker(null);
-						setCurrentIndex(0);
-					}}
-				>
-					{type === "building"
-						? "Buildings"
-						: type === "office"
-							? "Offices"
-							: "Printers"}
-				</Button>
-			))}
-		</div>
-	);
 
 	return (
 		<>
 			<div className="w-full flex justify-center items-start p-4 md:p-8">
 				<div className="flex flex-col md:flex-row gap-4 md:gap-8 w-full max-w-7xl mx-auto justify-center">
-					{isMobile && <FilterButtons />}
+					{isMobile && <FilterButtons
+							selectedType={selectedType}
+							onSelect={(type) => {
+								setSelectedType(type);
+								setSelectedMarker(null);
+								setCurrentIndex(0);
+							}}
+						/>}
 
 					<div className="relative w-full md:w-[1000px] h-[500px] md:h-[650px]">
 						{!isMobile && (
@@ -506,7 +527,14 @@ export default function CampusMap({
 						)}
 					</div>
 
-					{!isMobile && <FilterButtons />}
+					{!isMobile && <FilterButtons
+							selectedType={selectedType}
+							onSelect={(type) => {
+								setSelectedType(type);
+								setSelectedMarker(null);
+								setCurrentIndex(0);
+							}}
+						/>}
 				</div>
 			</div>
 

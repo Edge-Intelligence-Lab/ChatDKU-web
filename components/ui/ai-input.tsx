@@ -1,7 +1,7 @@
 "use client";
 
 import { CornerRightUp, Loader2, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { useAutoResizeTextarea } from "@/hooks/use-auto-resize-textarea";
@@ -9,15 +9,11 @@ import { useLanguage } from "@/components/language-provider";
 
 export function AIInput({
   id = "ai-input",
-  placeholder = "Type your message...",
   minHeight = 40,
   maxHeight = 200,
   onSubmit,
   onInputChange,
   className,
-  thinkingMode,
-  onThinkingModeChange,
-  onEndpointChange,
   activeReference,
   onClearReference,
   disabled = false,
@@ -45,25 +41,11 @@ export function AIInput({
     maxHeight,
   });
   const [inputValue, setInputValue] = useState("");
-  const [isThinking, setIsThinking] = useState(thinkingMode || false);
   const { t } = useLanguage();
 
   const inputButtonStyle = cn(
     "flex items-center justify-around gap-1 p-2 text-sm min-w-[45px] min-h-[45px] rounded-4xl cursor-pointer border-transparent hover:border-foreground/10 border-1 hover:shadow-md active:text-foreground active:bg-foreground/10 transition-all duration-200",
   );
-
-  useEffect(() => {
-    if (thinkingMode !== undefined && thinkingMode !== isThinking) {
-      setIsThinking(thinkingMode);
-    }
-  }, [thinkingMode]);
-
-  const toggleThinkingMode = () => {
-    if (disabled) return;
-    const newValue = !isThinking;
-    setIsThinking(newValue);
-    onThinkingModeChange?.(newValue);
-  };
 
   // Listen for external value changes through the input event
   useEffect(() => {

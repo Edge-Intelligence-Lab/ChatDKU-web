@@ -23,6 +23,7 @@ export function PromptRecs({ onPromptSelect, onSubmit }: PromptRecsProps) {
 	useEffect(() => {
 		const prompts = language === "zh" ? promptsZh : promptsEn;
 		const count = window.matchMedia("(max-width: 640px)").matches ? 3 : 5;
+		// eslint-disable-next-line react-hooks/set-state-in-effect -- randomized pick is client-only to avoid hydration mismatch
 		setSelected(pickRandomPrompts(prompts, count));
 	}, [language]);
 

@@ -9,9 +9,9 @@ export interface SessionResponse {
 }
 
 export interface Message {
-	role: "Bot" | "User";
+	role: "bot" | "user";
 	content: string;
-	timestamp: string;
+	timestamp?: string;
 }
 
 export interface Convo {
@@ -132,28 +132,28 @@ export async function getSessionMessages(
 			return [];
 		}
 
-		const data = await response.json();
+		const data: unknown = await response.json();
 
-		return data.map((msg: any) => {
-			const rawRole = (msg?.role ?? "").toString().toLowerCase();
+		if (!Array.isArray(data)) return [];
+
+		return data.map((msg: unknown) => {
+			const m = msg as Record<string, unknown>;
+			const rawRole = ((m?.role as string | undefined) ?? "").toLowerCase();
 			const role = rawRole === "bot" ? "bot" : "user";
 
 			// Prefer `content` if present; fall back to backend's `message` field
-			let contentValue: any = (msg as any)?.content ?? (msg as any)?.message;
+			let contentValue: unknown = m?.content ?? m?.message;
 			if (Array.isArray(contentValue)) {
 				contentValue = contentValue
-					.map((part) =>
-						typeof part === "string"
-							? part
-							: (part?.text ?? part?.content ?? ""),
-					)
+					.map((part: unknown) => {
+						if (typeof part === "string") return part;
+						const p = part as Record<string, unknown> | null;
+						return (p?.text as string) ?? (p?.content as string) ?? "";
+					})
 					.join("\n");
 			} else if (typeof contentValue === "object" && contentValue !== null) {
-				contentValue =
-					contentValue.text ??
-					contentValue.content ??
-					contentValue.message ??
-					"";
+				const c = contentValue as Record<string, unknown>;
+				contentValue = c.text ?? c.content ?? c.message ?? "";
 			}
 			const content =
 				typeof contentValue === "string"
@@ -163,7 +163,7 @@ export async function getSessionMessages(
 			return {
 				role,
 				content,
-				timestamp: msg?.timestamp,
+				timestamp: m?.timestamp as string | undefined,
 			};
 		});
 	} catch (error) {
