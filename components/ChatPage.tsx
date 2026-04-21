@@ -765,32 +765,34 @@ export default function ChatPage({ isDev = false }: ChatPageProps) {
 										throw new Error("Failed to create stream container");
 
 									const thinkingChatLog = document.getElementById("chat-log");
-									let thinkingBox: ReturnType<typeof createThinkingBox> | null = null;
+									// Object wrapper prevents TypeScript from narrowing the ref to 'never'
+									// through closure control-flow analysis after the async call.
+									const tb = { box: null as ReturnType<typeof createThinkingBox> | null };
 
 									const streamResult = await streamFromReader(
 										response,
 										streamContainer as HTMLElement,
 										{
 											onThinkingContent: (content) => {
-												if (!thinkingBox && thinkingChatLog) {
-													thinkingBox = createThinkingBox(thinkingChatLog);
+												if (!tb.box && thinkingChatLog) {
+													tb.box = createThinkingBox(thinkingChatLog);
 												}
-												thinkingBox?.updateContent(content);
+												tb.box?.updateContent(content);
 											},
 											onResponseStart: () => {
-												if (thinkingBox) {
-													const box = thinkingBox;
-													thinkingBox = null;
+												if (tb.box) {
+													const box = tb.box;
+													tb.box = null;
 													void box.dismiss();
 												}
 											},
 										},
 									);
 
-									const pendingBox = thinkingBox;
-									if (pendingBox) {
-										thinkingBox = null;
-										await pendingBox.dismiss();
+									if (tb.box) {
+										const box = tb.box;
+										tb.box = null;
+										await box.dismiss();
 									}
 
 									let data: string;
