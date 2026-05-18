@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 
 const MOCK_STREAM_EVENTS = [
   { id: "mock-1", data: { type: "reasoning", stage: "start", content: "Agent started" } },
