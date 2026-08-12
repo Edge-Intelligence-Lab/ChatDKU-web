@@ -1,0 +1,24 @@
+[Unit]
+Description=ChatDKU Next.js Web Server
+After=network.target
+
+[Service]
+Type=simple
+User=chatdku-admin
+Group=deploy
+WorkingDirectory=/opt/chatdku/ChatDKU-web
+
+# Apache is the only thing that should reach this port, so bind to loopback.
+Environment=NODE_ENV=production
+Environment=PATH=/opt/node-22/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+EnvironmentFile=-/opt/chatdku/ChatDKU-web/.env.production
+
+ExecStart=/opt/node-22/bin/node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3000
+
+Restart=always
+RestartSec=10
+KillMode=mixed
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

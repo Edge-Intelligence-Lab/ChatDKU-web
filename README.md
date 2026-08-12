@@ -59,22 +59,91 @@ returns.
 
 ### Deploying to production:
 
-The app runs as a long-lived `npm start` process inside a tmux session on GPU4, serving port 3000. Deploying means rebuilding in place and restarting that process:
+The app runs on GPU4 as `chatdku-web.service`, a systemd unit that keeps `next start` alive on
+127.0.0.1:3000 and brings it back after a crash or a reboot. The unit file lives at the root of this
+repo; `/etc/systemd/system/chatdku-web.service` is a copy of it. Deploying means rebuilding in place
+and restarting the unit:
 
 ```bash
+cd /opt/chatdku/ChatDKU-web
 git pull
 npm ci
 npm run build
+sudo systemctl restart chatdku-web
 ```
 
-Then attach to the tmux session running the app, stop it with `Ctrl-C`, and start the new build:
-
-```bash
-npm start
-```
-
-Detach with `Ctrl-B D` — closing the terminal without detaching kills the server.
+Build before restarting, not after: `next start` serves whatever is in `.next` at the moment it
+boots, so restarting first would put the old build back up and then swap it out mid-flight.
 
 Afterwards, visit [ChatDKU](https://chatdku.dukekunshan.edu.cn) in incognito mode. Make sure a chat response streams in and is clear and legible.
 
-> **Rollback**: there is no build backup to restore any more — `git checkout <last-good-commit>` and rebuild.
+Useful commands:
+
+```bash
+systemctl status chatdku-web
+journalctl -u chatdku-web -f          # live logs
+journalctl -u chatdku-web -n 100      # last 100 lines
+```
+
+> **Rollback**: there is no build backup to restore — `git checkout <last-good-commit>`, rebuild, and
+> restart the unit.
+
+### First-time setup on a new box:
+
+These steps are only needed once. Everything runs as `chatdku-admin`, the user the other ChatDKU
+services on GPU4 already run as.
+
+**1. Install a supported Node runtime.** GPU4's system `node` is 18, and Next 16 needs 20.9 or
+newer. Rather than upgrading the system package out from under the other services on that box,
+unpack the LTS tarball into `/opt/node-22`, which is the path the unit's `PATH` points at:
+
+```bash
+curl -fsSLO https://nodejs.org/dist/v22.22.2/node-v22.22.2-linux-x64.tar.xz
+sudo mkdir -p /opt/node-22
+sudo tar -xJf node-v22.22.2-linux-x64.tar.xz -C /opt/node-22 --strip-components=1
+/opt/node-22/bin/node -v
+```
+
+**2. Clone the repo to `/opt/chatdku/ChatDKU-web`**, alongside the backend checkout, and give it the
+same `chatdku-admin:deploy` ownership as its siblings:
+
+```bash
+sudo -u chatdku-admin git clone git@github.com:Edge-Intelligence-Lab/ChatDKU-web.git \
+  /opt/chatdku/ChatDKU-web
+sudo chown -R chatdku-admin:deploy /opt/chatdku/ChatDKU-web
+```
+
+This is a private repo, so `chatdku-admin` needs an SSH deploy key on GitHub before the clone will
+go through.
+
+**3. Build once**, as `chatdku-admin` so the `.next` directory ends up owned by the user that will
+serve it:
+
+```bash
+sudo -u chatdku-admin -H bash -c 'cd /opt/chatdku/ChatDKU-web && \
+  PATH=/opt/node-22/bin:$PATH npm ci && PATH=/opt/node-22/bin:$PATH npm run build'
+```
+
+**4. Add `/opt/chatdku/ChatDKU-web/.env.production`** if this deployment needs to override anything
+(`BACKEND_BASE_URL`, for instance). The file is optional — the unit starts without it, and
+`NODE_ENV=production` already keeps `MOCK_API` off. Keep it out of git.
+
+**5. Install and enable the unit:**
+
+```bash
+sudo cp /opt/chatdku/ChatDKU-web/chatdku-web.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now chatdku-web
+systemctl status chatdku-web
+```
+
+`enable --now` both starts it and makes it come back on reboot. Confirm it is actually listening
+before you go looking at Apache:
+
+```bash
+ss -tlnp | grep 3000
+curl -I http://127.0.0.1:3000
+```
+
+If you edit `chatdku-web.service` in the repo, the copy under `/etc/systemd/system/` does not change
+by itself — copy it over again and `daemon-reload`.
