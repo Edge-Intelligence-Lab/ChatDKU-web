@@ -67,10 +67,15 @@ and restarting the unit:
 ```bash
 cd /opt/chatdku/ChatDKU-web
 git pull
-npm ci
-npm run build
+PATH=/opt/node-22/bin:$PATH npm ci
+PATH=/opt/node-22/bin:$PATH npm run build
 sudo systemctl restart chatdku-web
 ```
+
+Pull as yourself — the checkout is owned by a maintainer and shared through the `deploy` group, not
+owned by `chatdku-admin` (see first-time setup below for why). The `PATH` prefix is there because
+the system `node` on GPU4 is 18, too old to build this; put `/opt/node-22/bin` on your `PATH` in
+`~/.bashrc` if you deploy often.
 
 Build before restarting, not after: `next start` serves whatever is in `.next` at the moment it
 boots, so restarting first would put the old build back up and then swap it out mid-flight.
@@ -104,24 +109,36 @@ sudo tar -xJf node-v22.22.2-linux-x64.tar.xz -C /opt/node-22 --strip-components=
 /opt/node-22/bin/node -v
 ```
 
-**2. Clone the repo to `/opt/chatdku/ChatDKU-web`**, alongside the backend checkout, and give it the
-same `chatdku-admin:deploy` ownership as its siblings:
+**2. Clone the repo to `/opt/chatdku/ChatDKU-web`**, alongside the backend checkout, as *your own*
+user — not as `chatdku-admin`:
 
 ```bash
-sudo -u chatdku-admin git clone git@github.com:Edge-Intelligence-Lab/ChatDKU-web.git \
-  /opt/chatdku/ChatDKU-web
-sudo chown -R chatdku-admin:deploy /opt/chatdku/ChatDKU-web
+git clone git@github.com:Edge-Intelligence-Lab/ChatDKU-web.git /opt/chatdku/ChatDKU-web
 ```
 
-This is a private repo, so `chatdku-admin` needs an SSH deploy key on GitHub before the clone will
-go through.
+The service runs as `chatdku-admin`, but the checkout deliberately is not owned by it.
+`chatdku-admin` has no credentials on GitHub, so a checkout owned by it could never be
+`git pull`ed; and running `git` against a repo owned by another user trips Git's dubious-ownership
+guard anyway. Instead the whole tree is shared through the `deploy` group, which every maintainer
+belongs to. `/opt/chatdku` is setgid with `group::rwx`, so anything created inside it inherits group
+`deploy`, and the standard `umask 002` on this box makes it group-writable. `ChatDKU-backend` next
+door works exactly this way — owned by a person, served by `chatdku-admin`.
 
-**3. Build once**, as `chatdku-admin` so the `.next` directory ends up owned by the user that will
-serve it:
+Two things follow. Keep your umask at `002` when you build, or `.next` comes out group-read-only and
+the service cannot write its runtime cache. And if you clone as a user who is somehow not in
+`deploy`, fix the group rather than the owner:
 
 ```bash
-sudo -u chatdku-admin -H bash -c 'cd /opt/chatdku/ChatDKU-web && \
-  PATH=/opt/node-22/bin:$PATH npm ci && PATH=/opt/node-22/bin:$PATH npm run build'
+sudo chgrp -R deploy /opt/chatdku/ChatDKU-web
+sudo chmod -R g+w /opt/chatdku/ChatDKU-web
+```
+
+**3. Build once:**
+
+```bash
+cd /opt/chatdku/ChatDKU-web
+PATH=/opt/node-22/bin:$PATH npm ci
+PATH=/opt/node-22/bin:$PATH npm run build
 ```
 
 **4. Add `/opt/chatdku/ChatDKU-web/.env.production`** if this deployment needs to override anything
