@@ -82,20 +82,20 @@ export default function AcademicCalendar() {
   const selectedEvents = getEventsForDate(selectedDate);
 
   return (
-    <div className="w-full h-[calc(100vh-110px)] max-w-6xl mx-auto px-4 py-3">
-      <div className="h-full overflow-hidden rounded-[30px] border border-border bg-card shadow-2xl">
+    <div className="w-full lg:h-[calc(100vh-110px)] max-w-6xl mx-auto px-1 lg:px-4 py-2 lg:py-3">
+      <div className="lg:h-full overflow-hidden lg:rounded-[30px] lg:border lg:border-border lg:bg-card lg:shadow-2xl">
         {/* HEADER */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="text-2xl font-bold tracking-tight">
+        <div className="flex items-center justify-between px-3 lg:px-6 py-1.5 lg:py-4 border-b border-border">
+          <h2 className="hidden lg:block text-2xl font-bold tracking-tight">
             Academic Calendar
           </h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-1 lg:gap-2 w-full lg:w-auto">
             <button
               onClick={() => {
                 if (month === 0) { setMonth(11); setYear((y) => y - 1); }
                 else { setMonth((m) => m - 1); }
               }}
-              className="w-10 h-10 rounded-2xl bg-muted hover:scale-105 transition-all flex items-center justify-center"
+              className="w-7 h-7 lg:w-10 lg:h-10 rounded-xl lg:rounded-2xl bg-muted hover:scale-105 transition-all flex items-center justify-center text-sm lg:text-base"
             >
               ←
             </button>
@@ -107,7 +107,7 @@ export default function AcademicCalendar() {
                   setPickerYear(year);
                   setPickerOpen(!pickerOpen);
                 }}
-                className="min-w-[150px] px-3 py-2 rounded-xl font-semibold text-lg hover:bg-muted transition-colors"
+                className="min-w-[120px] lg:min-w-[150px] px-2 lg:px-3 py-1.5 lg:py-2 rounded-xl font-semibold text-base lg:text-lg hover:bg-muted transition-colors"
               >
                 {MONTHS[month]} {year}
               </button>
@@ -169,7 +169,7 @@ export default function AcademicCalendar() {
                 if (month === 11) { setMonth(0); setYear((y) => y + 1); }
                 else { setMonth((m) => m + 1); }
               }}
-              className="w-10 h-10 rounded-2xl bg-muted hover:scale-105 transition-all flex items-center justify-center"
+              className="w-7 h-7 lg:w-10 lg:h-10 rounded-xl lg:rounded-2xl bg-muted hover:scale-105 transition-all flex items-center justify-center text-sm lg:text-base"
             >
               →
             </button>
@@ -177,23 +177,22 @@ export default function AcademicCalendar() {
         </div>
 
         {/* MAIN */}
-        <div className="grid grid-cols-[1.5fr_0.5fr] h-[calc(100%-73px)]">
-          {/* LEFT */}
-          <div className="p-4 flex flex-col h-full overflow-hidden">
+        <div className="flex flex-col lg:grid lg:grid-cols-[1.5fr_0.5fr] lg:h-[calc(100%-73px)]">
+          {/* LEFT — Calendar grid */}
+          <div className="p-1.5 lg:p-4 flex flex-col lg:h-full lg:overflow-hidden">
             {/* WEEK HEADER */}
-            <div className="grid grid-cols-7 gap-2 mb-2 flex-shrink-0">
+            <div className="grid grid-cols-7 gap-[2px] lg:gap-2 mb-1 lg:mb-2 flex-shrink-0">
               {WEEKDAYS.map((day) => (
                 <div
                   key={day}
-                  className="text-center text-xs font-semibold text-muted-foreground"
-                >
-                  {day}
+                  className="text-center text-xs font-semibold text-muted-foreground truncate"
+                >{day}
                 </div>
               ))}
             </div>
 
             {/* CALENDAR */}
-            <div className="grid grid-cols-7 grid-rows-6 gap-2 flex-1 min-h-0">
+            <div className="grid grid-cols-7 grid-rows-6 gap-[2px] lg:gap-2 flex-1 min-h-0">
               {calendarCells.map((day, index) => {
                 if (!day) {
                   return (
@@ -214,7 +213,7 @@ export default function AcademicCalendar() {
                     key={dateKey}
                     onClick={() => setSelectedDate(dateKey)}
                     className={`
-                      relative rounded-2xl overflow-hidden border p-2
+                      relative rounded-lg lg:rounded-2xl overflow-hidden border p-1.5 lg:p-2
                       text-left transition-all duration-200
                       hover:scale-[1.02] min-h-0 h-full
                       ${
@@ -235,7 +234,7 @@ export default function AcademicCalendar() {
                     {/* CONTENT */}
                     <div className="relative z-10 h-full flex flex-col overflow-hidden">
                       <div
-                        className={`text-sm font-bold flex-shrink-0 ${
+                        className={`text-sm font-bold flex-shrink-0 leading-tight ${
                           events.length > 0
                             ? getEventStyles(events[0].type).text
                             : "text-foreground"
@@ -243,7 +242,20 @@ export default function AcademicCalendar() {
                       >
                         {day}
                       </div>
-                      <div className="mt-1 overflow-hidden flex-1">
+                      <div className="flex gap-0.5 mt-0.5 flex-wrap lg:hidden min-h-[10px]">
+                        {events.slice(0, 3).map((event) => {
+                          const s = getEventStyles(event.type);
+                          const dotBg = s.bg.replace(/\/15$/, "");
+                          return (
+                            <span
+                              key={event.id}
+                              className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotBg}`}
+                            />
+                          );
+                        })}
+                      </div>
+                      {/* Desktop: event titles */}
+                      <div className="mt-1 overflow-hidden flex-1 hidden lg:block">
                         {events.slice(0, 2).map((event) => (
                           <div
                             key={event.id}
@@ -261,11 +273,11 @@ export default function AcademicCalendar() {
           </div>
 
           {/* RIGHT PANEL */}
-          <div className="border-l border-border bg-muted/30 p-5 overflow-y-auto">
-            <h3 className="text-lg font-bold">{selectedDate}</h3>
-            <div className="mt-5 space-y-3">
+          <div className="border-t lg:border-t-0 lg:border-l border-border bg-muted/30 p-3 lg:p-5 lg:overflow-y-auto">
+            {/* Events */}
+            <div className="space-y-2 lg:space-y-3">
               {selectedEvents.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                <div className="rounded-xl lg:rounded-2xl border border-dashed border-border p-4 lg:p-8 text-center text-sm text-muted-foreground">
                   No events
                 </div>
               ) : (
@@ -274,7 +286,7 @@ export default function AcademicCalendar() {
                   return (
                     <div
                       key={event.id}
-                      className={`rounded-2xl border p-4 ${style.bg} ${style.border}`}
+                      className={`rounded-xl lg:rounded-2xl border p-3 lg:p-4 ${style.bg} ${style.border}`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className={`font-semibold text-sm ${style.text}`}>
@@ -308,11 +320,11 @@ export default function AcademicCalendar() {
                         </button>
                       </div>
                       {event.description && (
-                        <div className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                        <div className="mt-1.5 lg:mt-2 text-xs lg:text-sm text-muted-foreground leading-relaxed">
                           {event.description}
                         </div>
                       )}
-                      <div className="mt-2 text-xs text-muted-foreground">
+                      <div className="mt-1.5 lg:mt-2 text-xs text-muted-foreground">
                         {event.startDate}
                         {event.endDate && ` → ${event.endDate}`}
                       </div>
@@ -323,20 +335,20 @@ export default function AcademicCalendar() {
             </div>
 
             {/* LEGEND */}
-            <div className="mt-7">
-              <div className="text-sm font-semibold text-muted-foreground mb-3">
+            <div className="mt-5 lg:mt-7">
+              <div className="text-sm font-semibold text-muted-foreground mb-2 lg:mb-3">
                 Categories
               </div>
-              <div className="space-y-2 text-sm">
+              <div className="flex flex-wrap gap-x-4 gap-y-1.5 lg:gap-y-2 text-xs lg:text-sm">
                 {CATEGORIES.map((item) => {
                   const style = getEventStyles(item.type);
                   return (
                     <div
                       key={item.label}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-1.5 lg:gap-2"
                     >
                       <div
-                        className={`w-3 h-3 rounded-full ${style.bg} border ${style.border}`}
+                        className={`w-2.5 h-2.5 lg:w-3 lg:h-3 rounded-full ${style.bg} border ${style.border}`}
                       />
                       {item.label}
                     </div>

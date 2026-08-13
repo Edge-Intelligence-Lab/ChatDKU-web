@@ -12,6 +12,7 @@ import {
 	getSessionMessages,
 } from "@/lib/convosNew";
 import { AIInput } from "@/components/ui/ai-input";
+import { ViewChips } from "@/components/view-chips";
 import { Navbar } from "@/components/navbar";
 import { PromptRecs } from "@/components/prompt_recs";
 import WelcomeBanner from "@/components/WelcomeBanner";
@@ -827,7 +828,7 @@ export default function ChatPage({ isDev = false }: ChatPageProps) {
 							</div>
 						</div>
 					)}
-					
+
 					<div>
 						<AIInput
 							disabled={false}
@@ -850,6 +851,24 @@ export default function ChatPage({ isDev = false }: ChatPageProps) {
 								className={`transition-all duration-300 ${inputValue ? "opacity-0 max-h-0 overflow-hidden" : "opacity-100 max-h-96"}`}
 							>
 								<PromptRecs onPromptSelect={submitTurn} />
+							</div>
+						)}
+						{isChatboxCentered && (
+							<div
+								className={`absolute top-full left-0 right-0 transition-all duration-300 ${inputValue ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+							>
+								<ViewChips
+									onCampusMap={() => {
+										setActiveView("campus");
+										setShowStarter(false);
+										setIsChatboxCentered(false);
+									}}
+									onAcademicCalendar={() => {
+										setActiveView("calendar");
+										setShowStarter(false);
+										setIsChatboxCentered(false);
+									}}
+								/>
 							</div>
 						)}
 					</div>
