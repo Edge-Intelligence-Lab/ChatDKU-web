@@ -26,12 +26,6 @@ Note the vhost rule is `ProxyPass /user/ http://127.0.0.1:8009/user/` — balanc
 - Django's 401 body carries `login_url`. Client-side fetches that can outlive a session route through `handleUnauthorized()` in `lib/auth.ts`.
 - The credential is Django's `sessionid` cookie, `HttpOnly`, with a **one-week absolute** expiry. Not rolling: an active user still re-authenticates weekly.
 - `chatdku_session_id` is **not** authentication despite the name — it is the open conversation id and expires after a day.
-
-The full deployed design, and the vhost invariants that go with it, are in `SHIB_NARROWING_RUNBOOK.md` in the project folder (not this repo).
-
-Two more things follow from the routing table:
-
-- The student app you are working on talks to **Django**, not to the FastAPI service. The FastAPI backend on `:8999` is a separate product — the unauthenticated public chat used by `ChatDKU-web-public`, with its own JWT auth and a single-step plain-text stream. A third FastAPI service on `:8123` runs the agent itself and is only ever called by Django, through Celery.
 - Apache reaches Django directly, so **the route handlers under `app/api/` and `app/user/` only run in development**. They are still written as faithful proxies that mirror Django's URLs 1:1 (see `lib/server/backend.ts` for the full contract), so dev and production behave the same and a change to the Apache config cannot silently start serving mock data. Mock responses only appear when `MOCK_API` is on, which is the default for `npm run dev`.
 
 We're using the [shadcn/ui](https://ui.shadcn.com/) open-source UI library. This is a widely used, simple, and customizable UI library that uses Tailwind CSS for globally consistent styling.
@@ -85,13 +79,10 @@ sudo systemctl restart chatdku-web
 sudo rm /etc/apache2/maintenance.flag
 ```
 
-Pull as yourself — the checkout is owned by a maintainer and shared through the `deploy` group, not
+Pull as yourself — the checkout is owned by a maintainer (anar) and shared through the `deploy` group, not
 owned by `chatdku-admin` (see first-time setup below for why). The `PATH` prefix is there because
 the system `node` on GPU4 is 18, too old to build this; put `/opt/node-22/bin` on your `PATH` in
 `~/.bashrc` if you deploy often.
-
-**Skip `npm ci` unless `package-lock.json` actually changed.** It deletes `node_modules` before
-reinstalling, and `next start` is running out of that directory.
 
 **Take the maintenance window.** `next build` rewrites `.next` underneath the live server, so there
 is a window where a user can get a chunk mismatch. The vhost serves a maintenance page whenever
