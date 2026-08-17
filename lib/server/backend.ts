@@ -58,7 +58,9 @@ export function isMockApi(): boolean {
   return process.env.NODE_ENV === 'development' && process.env.MOCK_API !== 'false';
 }
 
-const FORWARDED_REQUEST_HEADERS = ['cookie', 'uid', 'x-displayname', 'affiliation'];
+// `x-eppn` is the fallback core/login.py derives the netid from when mod_shib's
+// attribute map does not release a bare `uid`.
+const FORWARDED_REQUEST_HEADERS = ['cookie', 'uid', 'x-eppn', 'x-displayname', 'affiliation'];
 
 function forwardedHeaders(request: Request, extra: Record<string, string> = {}): Headers {
   const headers = new Headers();
@@ -77,6 +79,11 @@ export interface BackendRequestInit {
   /** Serialised as JSON unless it is already a BodyInit. */
   body?: unknown;
   headers?: Record<string, string>;
+  /**
+   * `/api/login` answers with a 302 that the browser has to see. The default
+   * would follow it here and swallow the `Location`.
+   */
+  redirect?: RequestRedirect;
 }
 
 /** Calls `path` (e.g. "/api/c/") on the backend with this request's auth forwarded. */
@@ -85,7 +92,7 @@ export function backendFetch(
   path: string,
   init: BackendRequestInit = {},
 ): Promise<Response> {
-  const { method = 'GET', body, headers = {} } = init;
+  const { method = 'GET', body, headers = {}, redirect } = init;
 
   const isRawBody =
     body instanceof FormData ||
@@ -100,6 +107,7 @@ export function backendFetch(
 
   return fetch(`${BACKEND_BASE_URL}${path}`, {
     method,
+    ...(redirect ? { redirect } : {}),
     headers: forwardedHeaders(request, extra),
     body:
       body === undefined
