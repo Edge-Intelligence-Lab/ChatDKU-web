@@ -1,4 +1,5 @@
 import { API_ENDPOINTS } from "./constants";
+import { handleUnauthorized } from "./auth";
 
 // Session + conversation client for Django's SessionViewSet.
 // Wire shapes (chat/serializer.py):
@@ -42,6 +43,18 @@ const jsonRequest: RequestInit = {
 	headers: { "Content-Type": "application/json" },
 };
 
+/**
+ * The session cookie now lasts a week rather than until Apache next challenged
+ * the request, so a tab can outlive it. Every call below routes through here so
+ * that expiry sends the user back through NetID instead of quietly returning
+ * empty conversation lists.
+ */
+async function authedFetch(input: RequestInfo | URL, init?: RequestInit) {
+	const response = await fetch(input, init);
+	handleUnauthorized(response);
+	return response;
+}
+
 function setCookie(name: string, value: string, days = 1) {
 	if (typeof document === "undefined") return;
 	const expires = new Date(Date.now() + days * 864e5).toUTCString();
@@ -69,7 +82,7 @@ function deleteCookie(name: string) {
  */
 export async function getNewSession(): Promise<string | null> {
 	try {
-		const response = await fetch(API_ENDPOINTS.NEW_SESSION, {
+		const response = await authedFetch(API_ENDPOINTS.NEW_SESSION, {
 			method: "GET",
 			...jsonRequest,
 		});
@@ -128,7 +141,7 @@ export async function getSessionMessages(
 	sessionId: string,
 ): Promise<Message[]> {
 	try {
-		const response = await fetch(API_ENDPOINTS.SESSION_MESSAGES(sessionId), {
+		const response = await authedFetch(API_ENDPOINTS.SESSION_MESSAGES(sessionId), {
 			method: "GET",
 			...jsonRequest,
 		});
@@ -162,7 +175,7 @@ export async function getSessionMessages(
  */
 export async function getConversations(): Promise<Convo[]> {
 	try {
-		const response = await fetch(API_ENDPOINTS.CONVERSATIONS, {
+		const response = await authedFetch(API_ENDPOINTS.CONVERSATIONS, {
 			method: "GET",
 			...jsonRequest,
 		});
@@ -198,7 +211,7 @@ export async function renameConversation(
 	title: string,
 ): Promise<boolean> {
 	try {
-		const response = await fetch(API_ENDPOINTS.RENAME_SESSION(id), {
+		const response = await authedFetch(API_ENDPOINTS.RENAME_SESSION(id), {
 			method: "PATCH",
 			...jsonRequest,
 			body: JSON.stringify({ title }),
@@ -215,7 +228,7 @@ export async function renameConversation(
  */
 export async function deleteConversation(id: string): Promise<boolean> {
 	try {
-		const response = await fetch(API_ENDPOINTS.DELETE_SESSION(id), {
+		const response = await authedFetch(API_ENDPOINTS.DELETE_SESSION(id), {
 			method: "DELETE",
 			...jsonRequest,
 		});

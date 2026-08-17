@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import CampusMap from "@/components/campus-map";
 import AcademicCalendar from "@/components/academic-calendar";
 import { API_ENDPOINTS } from "@/lib/constants";
+import { handleUnauthorized } from "@/lib/auth";
 import {
 	configureMarked,
 	eventText,
@@ -531,6 +532,11 @@ export default function ChatPage({ isDev = false }: ChatPageProps) {
 
 			let postResponse = await postChat(postBody);
 
+			// An expired login is not a stale chatHistoryId. Minting a session
+			// would 401 too, so send the user through NetID first; the redirect
+			// is already in flight by the time the error path below runs.
+			handleUnauthorized(postResponse);
+
 			// A session the backend does not recognise is rejected up front,
 			// so mint a fresh one and retry that turn against it.
 			if (!postResponse.ok) {
@@ -566,6 +572,8 @@ export default function ChatPage({ isDev = false }: ChatPageProps) {
 					headers: { Accept: "text/event-stream" },
 				},
 			);
+
+			handleUnauthorized(sseResponse);
 
 			if (!sseResponse.ok) {
 				throw new Error(`SSE GET failed: ${sseResponse.status}`);
