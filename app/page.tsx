@@ -1,6 +1,11 @@
 "use client";
+import AuthGate from "@/components/AuthGate";
 import ChatPage from "@/components/ChatPage";
 
 export default function Home() {
-  return <ChatPage isDev={false} />;
+  return (
+    <AuthGate>
+      <ChatPage isDev={false} />
+    </AuthGate>
+  );
 }
