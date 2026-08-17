@@ -6,7 +6,7 @@ We're using the Next.js framework for its quick development opportunities and ri
 
 ### How a request reaches a backend
 
-There are three backend services on GPU4, and Apache (`/etc/apache2/sites-enabled/chatdku.conf`) decides which one gets each prefix. It terminates TLS and enforces Shibboleth, passing the identity down as `UID` / `X-DisplayName` headers:
+There are three backend services on GPU4, and Apache (`/etc/apache2/sites-enabled/chatdku.conf`) decides which one gets each prefix. It terminates TLS and fans out:
 
 | Path | Goes to |
 | --- | --- |
@@ -16,9 +16,20 @@ There are three backend services on GPU4, and Apache (`/etc/apache2/sites-enable
 | `/public/chat`, `/public/auth/get-token` | **FastAPI public**, `127.0.0.1:8999` |
 | everything else | **this Next server**, `127.0.0.1:3000` |
 
-One trap in that table: the `/user` rule is `ProxyPass /user http://127.0.0.1:8009/user/`, and the two sides disagree about the trailing slash. Apache appends whatever follows `/user` to a target that already ends in one, and Django's resolver never collapses repeated slashes. So `/user` works (empty remainder), while `/user/upload` reaches Django as `/user//upload` and 404s — **file uploads cannot work in production until that vhost rule is balanced** to `ProxyPass /user/ http://127.0.0.1:8009/user/`. Don't "fix" it by adding a trailing slash on the client; that just turns `/user` into `/user//`.
+Note the vhost rule is `ProxyPass /user/ http://127.0.0.1:8009/user/` — balanced on both sides. `/user/upload` therefore reaches Django intact, while bare `/user` does *not* match the rule and falls through to the Next catch-all, where `app/user/route.ts` proxies it on. Both work; they just take different routes. Don't add a trailing slash to `API_ENDPOINTS.USER` to "fix" the asymmetry — see the comment in `lib/constants.ts` for the history.
 
-Two more things follow from that table:
+### Authentication
+
+**Shibboleth guards `/api/login` and nothing else.** It is not enforced on the app, on `/api/*`, or on `/user` — so this app is served to signed-out visitors and has to notice.
+
+- `components/AuthGate.tsx` wraps the chat pages. It probes `/user` on load and, on a 401, redirects to `/api/login` with a 15-second guard against a redirect loop.
+- Django's 401 body carries `login_url`. Client-side fetches that can outlive a session route through `handleUnauthorized()` in `lib/auth.ts`.
+- The credential is Django's `sessionid` cookie, `HttpOnly`, with a **one-week absolute** expiry. Not rolling: an active user still re-authenticates weekly.
+- `chatdku_session_id` is **not** authentication despite the name — it is the open conversation id and expires after a day.
+
+The full deployed design, and the vhost invariants that go with it, are in `SHIB_NARROWING_RUNBOOK.md` in the project folder (not this repo).
+
+Two more things follow from the routing table:
 
 - The student app you are working on talks to **Django**, not to the FastAPI service. The FastAPI backend on `:8999` is a separate product — the unauthenticated public chat used by `ChatDKU-web-public`, with its own JWT auth and a single-step plain-text stream. A third FastAPI service on `:8123` runs the agent itself and is only ever called by Django, through Celery.
 - Apache reaches Django directly, so **the route handlers under `app/api/` and `app/user/` only run in development**. They are still written as faithful proxies that mirror Django's URLs 1:1 (see `lib/server/backend.ts` for the full contract), so dev and production behave the same and a change to the Apache config cannot silently start serving mock data. Mock responses only appear when `MOCK_API` is on, which is the default for `npm run dev`.
@@ -65,11 +76,13 @@ repo; `/etc/systemd/system/chatdku-web.service` is a copy of it. Deploying means
 and restarting the unit:
 
 ```bash
+sudo touch /etc/apache2/maintenance.flag        # see below
 cd /opt/chatdku/ChatDKU-web
 git pull
-PATH=/opt/node-22/bin:$PATH npm ci
+PATH=/opt/node-22/bin:$PATH npm ci              # only if the lockfile changed — see below
 PATH=/opt/node-22/bin:$PATH npm run build
 sudo systemctl restart chatdku-web
+sudo rm /etc/apache2/maintenance.flag
 ```
 
 Pull as yourself — the checkout is owned by a maintainer and shared through the `deploy` group, not
@@ -77,8 +90,19 @@ owned by `chatdku-admin` (see first-time setup below for why). The `PATH` prefix
 the system `node` on GPU4 is 18, too old to build this; put `/opt/node-22/bin` on your `PATH` in
 `~/.bashrc` if you deploy often.
 
+**Skip `npm ci` unless `package-lock.json` actually changed.** It deletes `node_modules` before
+reinstalling, and `next start` is running out of that directory.
+
+**Take the maintenance window.** `next build` rewrites `.next` underneath the live server, so there
+is a window where a user can get a chunk mismatch. The vhost serves a maintenance page whenever
+`/etc/apache2/maintenance.flag` exists, and its `RewriteCond` re-checks that file on every request —
+so no Apache reload is needed to raise or lower it.
+
 Build before restarting, not after: `next start` serves whatever is in `.next` at the moment it
 boots, so restarting first would put the old build back up and then swap it out mid-flight.
+
+**If this deploy changes the auth path**, the ordering against Apache matters — the frontend must
+ship before the vhost is ungated, never the reverse. See `SHIB_NARROWING_RUNBOOK.md` §4.
 
 Afterwards, visit [ChatDKU](https://chatdku.dukekunshan.edu.cn) in incognito mode. Make sure a chat response streams in and is clear and legible.
 
